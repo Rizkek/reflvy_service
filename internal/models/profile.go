@@ -1,9 +1,19 @@
+// internal/models/models.go
 package models
 
-// ProfileResponse represents the response for profile endpoint
+// ... ProfileResponse yang sudah ada
 type ProfileResponse struct {
 	Message    string `json:"message"`
 	UserID     string `json:"user_id"`
 	Email      string `json:"email"`
 	IsVerified bool   `json:"is_verified"`
+	Gender     string `json:"gender,omitempty"` // Tambahkan gender dan age
+	Age        int    `json:"age,omitempty"`
+}
+
+// Model untuk menyimpan data tambahan
+type UserDetails struct {
+	Gender string `json:"gender" binding:"required"`
+	Age    int    `json:"age" binding:"required"`
+	Email  string `json:"email"` // Simpan juga email untuk kemudahan query
 }

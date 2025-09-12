@@ -1,4 +1,4 @@
-// File: main.go
+// main.go
 
 package main
 
@@ -15,11 +15,11 @@ import (
 	"go-gin-project/internal/routes"
 )
 
-// setupFirebase initializes Firebase Admin SDK and returns auth and firestore clients
+// setupFirebase initializes Firebase Admin SDK and returns auth & firestore clients
 func setupFirebase() (*auth.Client, *firestore.Client) {
 	opt := option.WithCredentialsFile("reflvy-d3e67-firebase-adminsdk-fbsvc-18de96317f.json")
 
-	// Inisialisasi Firebase App
+	// Inisialisasi App
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("Error initializing Firebase app: %v\n", err)
@@ -34,7 +34,7 @@ func setupFirebase() (*auth.Client, *firestore.Client) {
 	// Inisialisasi Firestore Client
 	firestoreClient, err := app.Firestore(context.Background())
 	if err != nil {
-		log.Fatalf("Error getting Firestore client: %v\n", err)
+		log.Fatalf("Error initializing Firestore client: %v", err)
 	}
 
 	return authClient, firestoreClient
@@ -42,7 +42,8 @@ func setupFirebase() (*auth.Client, *firestore.Client) {
 
 func main() {
 	authClient, firestoreClient := setupFirebase()
-	defer firestoreClient.Close() // buat menutup koneksi
+	// Jangan lupa menutup koneksi firestore saat aplikasi berhenti
+	defer firestoreClient.Close()
 
 	router := gin.Default()
 
