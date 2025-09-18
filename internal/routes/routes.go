@@ -5,6 +5,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 
+	"go-gin-project/internal/handlers/detectnsfw"
 	"go-gin-project/internal/handlers/profile"
 	"go-gin-project/internal/middleware"
 
@@ -28,5 +29,8 @@ func SetupRoutes(router *gin.Engine, authClient *auth.Client, db *firestore.Clie
 
 		// Endpoint BARU untuk menyimpan detail gender dan usia
 		protected.POST("/profile/details", profile.SaveUserDetailsHandler(db))
+
+		// Endpoint untuk detect NSFW
+		protected.POST("/detectnsfw", detectnsfw.DetectNSFWHandler(db))
 	}
 }
