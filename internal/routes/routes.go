@@ -7,6 +7,7 @@ import (
 
 	"go-gin-project/internal/handlers/detectnsfw"
 	"go-gin-project/internal/handlers/profile"
+	"go-gin-project/internal/handlers/statistic"
 	"go-gin-project/internal/middleware"
 
 	"cloud.google.com/go/firestore"
@@ -19,6 +20,9 @@ func SetupRoutes(router *gin.Engine, authClient *auth.Client, db *firestore.Clie
 	router.GET("/public", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "This is a public endpoint"})
 	})
+
+	// Route untuk generate dummy statistik (tidak perlu auth, hanya untuk dev)
+	router.POST("/api/statistic/dummy", statistic.GenerateDummyStatisticHandler(db))
 
 	// Protected routes
 	protected := router.Group("/api")
