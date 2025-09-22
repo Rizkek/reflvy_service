@@ -19,7 +19,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.0-36.0.dev
+  sdk: ^3.0.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -36,6 +36,20 @@ dependencies:
   cupertino_icons: ^1.0.8
   get: ^4.7.2
   flutter_riverpod: ^2.6.1
+
+  # UI dan Font dependencies
+  google_fonts: ^6.1.0
+
+  # Firebase dependencies untuk authentication
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+
+  # Additional useful packages
+  shared_preferences: ^2.3.2
+  http: ^1.2.2
+  fl_chart: ^0.68.0
+  flutter_local_notifications: ^17.2.2
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
@@ -59,9 +73,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
