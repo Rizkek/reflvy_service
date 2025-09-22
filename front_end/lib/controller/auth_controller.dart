@@ -49,7 +49,7 @@ class AuthController extends GetxController {
         // Update state jika login berhasil
         currentUser.value = result['user'];
         isLoggedIn.value = true;
-        
+
         // Tampilkan pesan sukses
         Get.snackbar(
           'Berhasil',
@@ -63,7 +63,7 @@ class AuthController extends GetxController {
       } else {
         // Set error message jika login gagal
         errorMessage.value = result['message'];
-        
+
         // Tampilkan pesan error
         Get.snackbar(
           'Login Gagal',
@@ -78,7 +78,7 @@ class AuthController extends GetxController {
     } catch (e) {
       // Handle error
       errorMessage.value = 'Terjadi kesalahan: ${e.toString()}';
-      
+
       Get.snackbar(
         'Error',
         'Terjadi kesalahan saat login',
@@ -109,7 +109,7 @@ class AuthController extends GetxController {
         // Reset state jika logout berhasil
         currentUser.value = null;
         isLoggedIn.value = false;
-        
+
         // Tampilkan pesan sukses
         Get.snackbar(
           'Berhasil',
@@ -123,7 +123,7 @@ class AuthController extends GetxController {
       } else {
         // Set error message jika logout gagal
         errorMessage.value = result['message'];
-        
+
         Get.snackbar(
           'Logout Gagal',
           result['message'],
@@ -137,7 +137,7 @@ class AuthController extends GetxController {
     } catch (e) {
       // Handle error
       errorMessage.value = 'Terjadi kesalahan: ${e.toString()}';
-      
+
       Get.snackbar(
         'Error',
         'Terjadi kesalahan saat logout',
@@ -185,7 +185,7 @@ class AuthController extends GetxController {
       if (result['success'] == true) {
         // Update state jika berhasil
         currentUser.value = result['user'];
-        
+
         // Tampilkan pesan sukses
         Get.snackbar(
           'Berhasil',
@@ -199,7 +199,7 @@ class AuthController extends GetxController {
       } else {
         // Set error message jika gagal
         errorMessage.value = result['message'];
-        
+
         Get.snackbar(
           'Update Gagal',
           result['message'],
@@ -213,7 +213,7 @@ class AuthController extends GetxController {
     } catch (e) {
       // Handle error
       errorMessage.value = 'Terjadi kesalahan: ${e.toString()}';
-      
+
       Get.snackbar(
         'Error',
         'Terjadi kesalahan saat update profil',
@@ -283,7 +283,7 @@ class AuthController extends GetxController {
       },
       {
         'title': 'Scan selesai - 15 gambar aman',
-        'time': '5 menit yang lalu', 
+        'time': '5 menit yang lalu',
         'icon': Icons.check_circle_outline,
         'color': const Color(0xFF4CAF50),
       },

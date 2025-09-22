@@ -1,76 +1,63 @@
-// Model untuk riwayat deteksi NSFW
 class DetectionHistoryModel {
   final String id;
   final String userId;
   final String imagePath;
   final String imageName;
-  final double nsfwScore;
   final bool isNsfw;
-  final DateTime detectionDate;
-  final String status; // 'safe', 'unsafe', 'reviewed'
+  final double confidence;
+  final Map<String, double> predictions;
+  final DateTime detectedAt;
+  final String status; // 'processed', 'pending', 'failed'
 
   DetectionHistoryModel({
     required this.id,
     required this.userId,
     required this.imagePath,
     required this.imageName,
-    required this.nsfwScore,
     required this.isNsfw,
-    required this.detectionDate,
-    this.status = 'safe',
+    required this.confidence,
+    required this.predictions,
+    required this.detectedAt,
+    this.status = 'processed',
   });
 
-  // Konversi dari Map ke DetectionHistoryModel
-  factory DetectionHistoryModel.fromMap(Map<String, dynamic> map) {
+  factory DetectionHistoryModel.fromJson(Map<String, dynamic> json) {
     return DetectionHistoryModel(
-      id: map['id'] ?? '',
-      userId: map['userId'] ?? '',
-      imagePath: map['imagePath'] ?? '',
-      imageName: map['imageName'] ?? '',
-      nsfwScore: (map['nsfwScore'] ?? 0.0).toDouble(),
-      isNsfw: map['isNsfw'] ?? false,
-      detectionDate: DateTime.parse(map['detectionDate'] ?? DateTime.now().toIso8601String()),
-      status: map['status'] ?? 'safe',
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? '',
+      imagePath: json['image_path'] ?? '',
+      imageName: json['image_name'] ?? '',
+      isNsfw: json['is_nsfw'] ?? false,
+      confidence: (json['confidence'] ?? 0.0).toDouble(),
+      predictions: Map<String, double>.from(json['predictions'] ?? {}),
+      detectedAt: DateTime.parse(json['detected_at'] ?? DateTime.now().toIso8601String()),
+      status: json['status'] ?? 'processed',
     );
   }
 
-  // Konversi dari DetectionHistoryModel ke Map
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'userId': userId,
-      'imagePath': imagePath,
-      'imageName': imageName,
-      'nsfwScore': nsfwScore,
-      'isNsfw': isNsfw,
-      'detectionDate': detectionDate.toIso8601String(),
+      'user_id': userId,
+      'image_path': imagePath,
+      'image_name': imageName,
+      'is_nsfw': isNsfw,
+      'confidence': confidence,
+      'predictions': predictions,
+      'detected_at': detectedAt.toIso8601String(),
       'status': status,
     };
   }
 
-  // Mendapatkan tingkat keamanan dalam bahasa Indonesia
-  String get safetyLevel {
-    if (nsfwScore < 0.3) return 'Aman';
-    if (nsfwScore < 0.7) return 'Perlu Perhatian';
-    return 'Tidak Aman';
-  }
-
-  // Mendapatkan warna berdasarkan tingkat keamanan
-  String get safetyColor {
-    if (nsfwScore < 0.3) return 'green';
-    if (nsfwScore < 0.7) return 'orange';
-    return 'red';
-  }
-
-  // Fungsi copyWith
   DetectionHistoryModel copyWith({
     String? id,
     String? userId,
     String? imagePath,
     String? imageName,
-    double? nsfwScore,
     bool? isNsfw,
-    DateTime? detectionDate,
+    double? confidence,
+    Map<String, double>? predictions,
+    DateTime? detectedAt,
     String? status,
   }) {
     return DetectionHistoryModel(
@@ -78,15 +65,33 @@ class DetectionHistoryModel {
       userId: userId ?? this.userId,
       imagePath: imagePath ?? this.imagePath,
       imageName: imageName ?? this.imageName,
-      nsfwScore: nsfwScore ?? this.nsfwScore,
       isNsfw: isNsfw ?? this.isNsfw,
-      detectionDate: detectionDate ?? this.detectionDate,
+      confidence: confidence ?? this.confidence,
+      predictions: predictions ?? this.predictions,
+      detectedAt: detectedAt ?? this.detectedAt,
       status: status ?? this.status,
     );
   }
 
+  String get riskLevel {
+    if (confidence >= 0.8) return 'High';
+    if (confidence >= 0.5) return 'Medium';
+    return 'Low';
+  }
+
+  String get resultText => isNsfw ? 'NSFW Detected' : 'Safe Content';
+
   @override
   String toString() {
-    return 'DetectionHistoryModel(id: $id, imageName: $imageName, safetyLevel: $safetyLevel)';
+    return 'DetectionHistoryModel(id: $id, imageName: $imageName, isNsfw: $isNsfw, confidence: $confidence)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DetectionHistoryModel && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

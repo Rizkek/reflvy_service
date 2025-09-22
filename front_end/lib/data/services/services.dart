@@ -1,3 +1,2 @@
-// Export semua service yang ada untuk memudahkan import
+// Export all service classes
 export 'auth_service.dart';
-export 'data_service.dart';

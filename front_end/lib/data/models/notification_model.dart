@@ -1,68 +1,85 @@
-// Model untuk notifikasi aplikasi
 class NotificationModel {
   final String id;
   final String userId;
   final String title;
-  final String message;
-  final String type; // 'detection', 'system', 'security'
-  final DateTime createdAt;
+  final String body;
+  final String type; // 'detection', 'security', 'update', 'alert'
+  final Map<String, dynamic>? data;
   final bool isRead;
-  final Map<String, dynamic>? additionalData;
+  final DateTime createdAt;
+  final DateTime? readAt;
 
   NotificationModel({
     required this.id,
     required this.userId,
     required this.title,
-    required this.message,
+    required this.body,
     required this.type,
-    required this.createdAt,
+    this.data,
     this.isRead = false,
-    this.additionalData,
+    required this.createdAt,
+    this.readAt,
   });
 
-  // Konversi dari Map ke NotificationModel
-  factory NotificationModel.fromMap(Map<String, dynamic> map) {
+  factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      id: map['id'] ?? '',
-      userId: map['userId'] ?? '',
-      title: map['title'] ?? '',
-      message: map['message'] ?? '',
-      type: map['type'] ?? 'system',
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
-      isRead: map['isRead'] ?? false,
-      additionalData: map['additionalData'],
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? '',
+      title: json['title'] ?? '',
+      body: json['body'] ?? '',
+      type: json['type'] ?? 'update',
+      data: json['data'],
+      isRead: json['is_read'] ?? false,
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      readAt: json['read_at'] != null ? DateTime.parse(json['read_at']) : null,
     );
   }
 
-  // Konversi dari NotificationModel ke Map
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'userId': userId,
+      'user_id': userId,
       'title': title,
-      'message': message,
+      'body': body,
       'type': type,
-      'createdAt': createdAt.toIso8601String(),
-      'isRead': isRead,
-      'additionalData': additionalData,
+      'data': data,
+      'is_read': isRead,
+      'created_at': createdAt.toIso8601String(),
+      'read_at': readAt?.toIso8601String(),
     };
   }
 
-  // Mendapatkan ikon berdasarkan tipe notifikasi
-  String get iconType {
-    switch (type) {
-      case 'detection':
-        return 'shield';
-      case 'security':
-        return 'security';
-      case 'system':
-        return 'info';
-      default:
-        return 'notification';
-    }
+  NotificationModel copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? body,
+    String? type,
+    Map<String, dynamic>? data,
+    bool? isRead,
+    DateTime? createdAt,
+    DateTime? readAt,
+  }) {
+    return NotificationModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      type: type ?? this.type,
+      data: data ?? this.data,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+      readAt: readAt ?? this.readAt,
+    );
   }
 
-  // Mendapatkan waktu relatif dalam bahasa Indonesia
+  NotificationModel markAsRead() {
+    return copyWith(
+      isRead: true,
+      readAt: DateTime.now(),
+    );
+  }
+
   String get timeAgo {
     final now = DateTime.now();
     final difference = now.difference(createdAt);
@@ -78,31 +95,17 @@ class NotificationModel {
     }
   }
 
-  // Fungsi copyWith
-  NotificationModel copyWith({
-    String? id,
-    String? userId,
-    String? title,
-    String? message,
-    String? type,
-    DateTime? createdAt,
-    bool? isRead,
-    Map<String, dynamic>? additionalData,
-  }) {
-    return NotificationModel(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      title: title ?? this.title,
-      message: message ?? this.message,
-      type: type ?? this.type,
-      createdAt: createdAt ?? this.createdAt,
-      isRead: isRead ?? this.isRead,
-      additionalData: additionalData ?? this.additionalData,
-    );
-  }
-
   @override
   String toString() {
     return 'NotificationModel(id: $id, title: $title, type: $type, isRead: $isRead)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is NotificationModel && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

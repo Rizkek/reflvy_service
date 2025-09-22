@@ -1,90 +1,85 @@
-// Model untuk data pengguna
 class UserModel {
   final String id;
-  final String username;
   final String email;
-  final String password;
+  final String username;
   final String firstName;
   final String lastName;
-  final String profileImage;
+  final String? profileImage;
   final DateTime createdAt;
-  final DateTime lastLogin;
+  final DateTime updatedAt;
 
   UserModel({
     required this.id,
-    required this.username,
     required this.email,
-    required this.password,
+    required this.username,
     required this.firstName,
     required this.lastName,
-    this.profileImage = '',
+    this.profileImage,
     required this.createdAt,
-    required this.lastLogin,
+    required this.updatedAt,
   });
 
-  // Getter untuk nama lengkap
-  String get displayName => '$firstName $lastName'.trim();
-
-  // Konversi dari Map ke UserModel
-  factory UserModel.fromMap(Map<String, dynamic> map) {
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: map['id'] ?? '',
-      username: map['username'] ?? '',
-      email: map['email'] ?? '',
-      password: map['password'] ?? '',
-      firstName: map['firstName'] ?? '',
-      lastName: map['lastName'] ?? '',
-      profileImage: map['profileImage'] ?? '',
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
-      lastLogin: DateTime.parse(map['lastLogin'] ?? DateTime.now().toIso8601String()),
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      username: json['username'] ?? '',
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
+      profileImage: json['profile_image'],
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 
-  // Konversi dari UserModel ke Map
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'username': username,
       'email': email,
-      'password': password,
-      'firstName': firstName,
-      'lastName': lastName,
-      'profileImage': profileImage,
-      'createdAt': createdAt.toIso8601String(),
-      'lastLogin': lastLogin.toIso8601String(),
+      'username': username,
+      'first_name': firstName,
+      'last_name': lastName,
+      'profile_image': profileImage,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
-  // Fungsi untuk mendapatkan nama lengkap
-  String get fullName => '$firstName $lastName';
-
-  // Fungsi untuk copyWith (membuat salinan dengan perubahan)
   UserModel copyWith({
     String? id,
-    String? username,
     String? email,
-    String? password,
+    String? username,
     String? firstName,
     String? lastName,
     String? profileImage,
     DateTime? createdAt,
-    DateTime? lastLogin,
+    DateTime? updatedAt,
   }) {
     return UserModel(
       id: id ?? this.id,
-      username: username ?? this.username,
       email: email ?? this.email,
-      password: password ?? this.password,
+      username: username ?? this.username,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       profileImage: profileImage ?? this.profileImage,
       createdAt: createdAt ?? this.createdAt,
-      lastLogin: lastLogin ?? this.lastLogin,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
+  String get fullName => '$firstName $lastName';
+
   @override
   String toString() {
-    return 'UserModel(id: $id, username: $username, email: $email, fullName: $fullName)';
+    return 'UserModel(id: $id, email: $email, username: $username, firstName: $firstName, lastName: $lastName)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserModel && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

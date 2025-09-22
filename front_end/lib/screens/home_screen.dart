@@ -10,12 +10,9 @@ import 'history_detection_screen.dart';
 
 // Providers untuk mengelola state home screen
 final currentBottomNavIndexProvider = StateProvider<int>((ref) => 0);
-final detectionStatsProvider = StateProvider<Map<String, int>>((ref) => {
-      'today': 12,
-      'week': 45,
-      'month': 180,
-      'blocked': 25,
-    });
+final detectionStatsProvider = StateProvider<Map<String, int>>(
+  (ref) => {'today': 12, 'week': 45, 'month': 180, 'blocked': 25},
+);
 
 /// Halaman utama aplikasi dengan bottom navigation
 /// Menampilkan dashboard, monitoring, dan profile
@@ -41,10 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: IndexedStack(
-        index: currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: currentIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (index) {
@@ -97,27 +91,29 @@ class DashboardPage extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Obx(() => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Selamat Datang',
-                  style: GoogleFonts.raleway(
-                    color: const Color(0xFF979797),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+        title: Obx(
+          () => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Selamat Datang',
+                style: GoogleFonts.raleway(
+                  color: const Color(0xFF979797),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
-                Text(
-                  authController.currentUser.value?.displayName ?? 'User',
-                  style: GoogleFonts.raleway(
-                    color: const Color(0xFF181818),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+              ),
+              Text(
+                authController.currentUser.value?.fullName ?? 'User',
+                style: GoogleFonts.raleway(
+                  color: const Color(0xFF181818),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
-            )),
+              ),
+            ],
+          ),
+        ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
@@ -168,10 +164,7 @@ class DashboardPage extends ConsumerWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF3F88EB),
-                      Color(0xFF2196F3),
-                    ],
+                    colors: [Color(0xFF3F88EB), Color(0xFF2196F3)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -347,8 +340,17 @@ class DashboardPage extends ConsumerWidget {
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (value, meta) {
-                                  const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-                                  if (value.toInt() >= 0 && value.toInt() < days.length) {
+                                  const days = [
+                                    'Sen',
+                                    'Sel',
+                                    'Rab',
+                                    'Kam',
+                                    'Jum',
+                                    'Sab',
+                                    'Min',
+                                  ];
+                                  if (value.toInt() >= 0 &&
+                                      value.toInt() < days.length) {
                                     return Text(
                                       days[value.toInt()],
                                       style: GoogleFonts.raleway(
@@ -366,7 +368,10 @@ class DashboardPage extends ConsumerWidget {
                           lineBarsData: [
                             LineChartBarData(
                               spots: weeklyData.asMap().entries.map((entry) {
-                                return FlSpot(entry.key.toDouble(), entry.value.toDouble());
+                                return FlSpot(
+                                  entry.key.toDouble(),
+                                  entry.value.toDouble(),
+                                );
                               }).toList(),
                               isCurved: true,
                               color: const Color(0xFF3F88EB),
@@ -428,7 +433,8 @@ class DashboardPage extends ConsumerWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   itemCount: recentActivities.length,
-                  separatorBuilder: (context, index) => const Divider(height: 24),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 24),
                   itemBuilder: (context, index) {
                     final activity = recentActivities[index];
                     return _buildActivityItem(
@@ -451,7 +457,12 @@ class DashboardPage extends ConsumerWidget {
 
   /// Widget untuk menampilkan item statistik
   /// Parameters: label, value, icon, color
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Row(
       children: [
         Icon(icon, color: color, size: 16),
@@ -545,7 +556,12 @@ class DashboardPage extends ConsumerWidget {
 
   /// Widget untuk menampilkan item aktivitas
   /// Parameters: title, time, icon, color
-  Widget _buildActivityItem(String title, String time, IconData icon, Color color) {
+  Widget _buildActivityItem(
+    String title,
+    String time,
+    IconData icon,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
@@ -690,8 +706,11 @@ class MonitoringPage extends ConsumerWidget {
                       return BarChart(
                         BarChartData(
                           alignment: BarChartAlignment.spaceAround,
-                          maxY: monthlyData.isNotEmpty 
-                              ? monthlyData.reduce((a, b) => a > b ? a : b).toDouble() * 1.2
+                          maxY: monthlyData.isNotEmpty
+                              ? monthlyData
+                                        .reduce((a, b) => a > b ? a : b)
+                                        .toDouble() *
+                                    1.2
                               : 100,
                           barTouchData: BarTouchData(enabled: false),
                           titlesData: FlTitlesData(
@@ -700,8 +719,16 @@ class MonitoringPage extends ConsumerWidget {
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (value, meta) {
-                                  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
-                                  if (value.toInt() >= 0 && value.toInt() < months.length) {
+                                  const months = [
+                                    'Jan',
+                                    'Feb',
+                                    'Mar',
+                                    'Apr',
+                                    'Mei',
+                                    'Jun',
+                                  ];
+                                  if (value.toInt() >= 0 &&
+                                      value.toInt() < months.length) {
                                     return Text(
                                       months[value.toInt()],
                                       style: GoogleFonts.raleway(
@@ -755,7 +782,12 @@ class MonitoringPage extends ConsumerWidget {
 
   /// Widget untuk menampilkan summary card
   /// Parameters: title, value, icon, color
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

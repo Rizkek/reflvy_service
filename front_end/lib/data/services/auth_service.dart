@@ -1,82 +1,155 @@
-import '../app_data.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 
-/// Service untuk mengelola autentikasi pengguna
-/// Menggunakan data statis dari AppData untuk simulasi login
 class AuthService {
-  // Instance singleton
-  static final AuthService _instance = AuthService._internal();
-  factory AuthService() => _instance;
-  AuthService._internal();
+  static const String _baseUrl = 'http://localhost:8080/api'; // Update with your Go backend URL
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'user_data';
 
-  // User yang sedang login
   UserModel? _currentUser;
+  String? _authToken;
 
-  // Getter untuk mendapatkan user yang sedang login
+  // Getter untuk current user
   UserModel? get currentUser => _currentUser;
 
-  // Getter untuk mengecek status login
-  bool get isLoggedIn => _currentUser != null;
+  // Constructor - load user data saat service diinisialisasi
+  AuthService() {
+    _loadUserData();
+  }
 
-  /// Fungsi untuk melakukan login
-  /// Parameter:
-  /// - emailOrUsername: Email atau username pengguna
-  /// - password: Password pengguna
-  /// Return: Map dengan status dan pesan
+  /// Load user data dari SharedPreferences
+  Future<void> _loadUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_tokenKey);
+      final userData = prefs.getString(_userKey);
+
+      if (token != null && userData != null) {
+        _authToken = token;
+        final userJson = jsonDecode(userData);
+        _currentUser = UserModel.fromJson(userJson);
+      }
+    } catch (e) {
+      // Ignore error, user will need to login again
+      print('Error loading user data: $e');
+    }
+  }
+
+  /// Save user data ke SharedPreferences
+  Future<void> _saveUserData(UserModel user, String token) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tokenKey, token);
+      await prefs.setString(_userKey, jsonEncode(user.toJson()));
+      
+      _currentUser = user;
+      _authToken = token;
+    } catch (e) {
+      print('Error saving user data: $e');
+    }
+  }
+
+  /// Clear user data dari SharedPreferences
+  Future<void> _clearUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenKey);
+      await prefs.remove(_userKey);
+      
+      _currentUser = null;
+      _authToken = null;
+    } catch (e) {
+      print('Error clearing user data: $e');
+    }
+  }
+
+  /// Login function
   Future<Map<String, dynamic>> login(String emailOrUsername, String password) async {
     try {
-      // Simulasi delay untuk loading
-      await Future.delayed(const Duration(seconds: 1));
+      // Untuk demo, gunakan mock data
+      // Dalam implementasi nyata, ganti dengan API call ke backend Go
+      await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
 
-      // Validasi input
-      if (emailOrUsername.isEmpty || password.isEmpty) {
-        return {
-          'success': false,
-          'message': 'Email/Username dan password tidak boleh kosong',
-          'user': null,
-        };
-      }
+      // Mock login validation
+      if ((emailOrUsername == 'admin@example.com' || emailOrUsername == 'admin') && 
+          password == 'admin123') {
+        
+        final mockUser = UserModel(
+          id: '1',
+          email: 'admin@example.com',
+          username: 'admin',
+          firstName: 'Admin',
+          lastName: 'User',
+          profileImage: null,
+          createdAt: DateTime.now().subtract(const Duration(days: 30)),
+          updatedAt: DateTime.now(),
+        );
 
-      // Validasi login dengan data statis
-      bool isValid = AppData.validateLogin(emailOrUsername, password);
-      
-      if (isValid) {
-        // Ambil data user dan update last login
-        _currentUser = AppData.getUserByEmailOrUsername(emailOrUsername);
-        if (_currentUser != null) {
-          _currentUser = _currentUser!.copyWith(lastLogin: DateTime.now());
-        }
+        const mockToken = 'mock_jwt_token_123456789';
+        
+        await _saveUserData(mockUser, mockToken);
 
         return {
           'success': true,
-          'message': 'Login berhasil! Selamat datang ${_currentUser!.firstName}',
-          'user': _currentUser,
+          'message': 'Login berhasil',
+          'user': mockUser,
+          'token': mockToken,
         };
       } else {
         return {
           'success': false,
-          'message': 'Email/Username atau password salah',
-          'user': null,
+          'message': 'Email/username atau password salah',
         };
       }
+
+      // Implementasi API call yang sebenarnya (uncomment dan modify sesuai kebutuhan):
+      /*
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email_or_username': emailOrUsername,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = UserModel.fromJson(data['user']);
+        final token = data['token'];
+        
+        await _saveUserData(user, token);
+
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Login berhasil',
+          'user': user,
+          'token': token,
+        };
+      } else {
+        final error = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Login gagal',
+        };
+      }
+      */
     } catch (e) {
       return {
         'success': false,
-        'message': 'Terjadi kesalahan saat login: ${e.toString()}',
-        'user': null,
+        'message': 'Terjadi kesalahan: ${e.toString()}',
       };
     }
   }
 
-  /// Fungsi untuk melakukan logout
-  /// Return: Map dengan status dan pesan
+  /// Logout function
   Future<Map<String, dynamic>> logout() async {
     try {
-      // Simulasi delay untuk loading
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Dalam implementasi nyata, bisa menambah API call untuk invalidate token
+      await _clearUserData();
 
-      _currentUser = null;
-      
       return {
         'success': true,
         'message': 'Logout berhasil',
@@ -89,17 +162,12 @@ class AuthService {
     }
   }
 
-  /// Fungsi untuk mendapatkan profil user yang sedang login
+  /// Get user profile
   UserModel? getProfile() {
     return _currentUser;
   }
 
-  /// Fungsi untuk update profil user
-  /// Parameter:
-  /// - firstName: Nama depan baru
-  /// - lastName: Nama belakang baru
-  /// - profileImage: Path gambar profil baru
-  /// Return: Map dengan status dan pesan
+  /// Update user profile
   Future<Map<String, dynamic>> updateProfile({
     String? firstName,
     String? lastName,
@@ -109,70 +177,136 @@ class AuthService {
       if (_currentUser == null) {
         return {
           'success': false,
-          'message': 'User belum login',
-          'user': null,
+          'message': 'User tidak ditemukan',
         };
       }
 
-      // Simulasi delay untuk loading
-      await Future.delayed(const Duration(milliseconds: 800));
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
 
-      // Update data user
-      _currentUser = _currentUser!.copyWith(
+      // Update user data
+      final updatedUser = _currentUser!.copyWith(
         firstName: firstName ?? _currentUser!.firstName,
         lastName: lastName ?? _currentUser!.lastName,
         profileImage: profileImage ?? _currentUser!.profileImage,
+        updatedAt: DateTime.now(),
       );
+
+      // Save updated data
+      if (_authToken != null) {
+        await _saveUserData(updatedUser, _authToken!);
+      }
 
       return {
         'success': true,
         'message': 'Profil berhasil diperbarui',
-        'user': _currentUser,
+        'user': updatedUser,
       };
     } catch (e) {
       return {
         'success': false,
-        'message': 'Terjadi kesalahan saat update profil: ${e.toString()}',
-        'user': null,
+        'message': 'Terjadi kesalahan: ${e.toString()}',
       };
     }
   }
 
-  /// Fungsi untuk mendapatkan statistik dashboard user
+  /// Get dashboard statistics
   Map<String, dynamic> getDashboardStats() {
-    if (_currentUser == null) return {};
-    
-    return AppData.dashboardStats;
+    // Mock data - dalam implementasi nyata diambil dari API
+    return {
+      'totalDetections': 1247,
+      'safeImages': 1198,
+      'nsfwImages': 49,
+      'accuracy': 96,
+      'weeklyData': [15, 23, 18, 31, 27, 19, 12],
+    };
   }
 
-  /// Fungsi untuk mendapatkan riwayat deteksi user
+  /// Get detection history
   List<DetectionHistoryModel> getDetectionHistory() {
-    if (_currentUser == null) return [];
-    
-    return AppData.getDetectionHistoryByUserId(_currentUser!.id);
+    // Mock data - dalam implementasi nyata diambil dari API
+    return [
+      DetectionHistoryModel(
+        id: '1',
+        userId: _currentUser?.id ?? '1',
+        imagePath: '/path/to/image1.jpg',
+        imageName: 'image1.jpg',
+        isNsfw: true,
+        confidence: 0.95,
+        predictions: {'nsfw': 0.95, 'safe': 0.05},
+        detectedAt: DateTime.now().subtract(const Duration(minutes: 2)),
+      ),
+      DetectionHistoryModel(
+        id: '2',
+        userId: _currentUser?.id ?? '1',
+        imagePath: '/path/to/image2.jpg',
+        imageName: 'image2.jpg',
+        isNsfw: false,
+        confidence: 0.98,
+        predictions: {'nsfw': 0.02, 'safe': 0.98},
+        detectedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+    ];
   }
 
-  /// Fungsi untuk mendapatkan notifikasi user
+  /// Get notifications
   List<NotificationModel> getNotifications() {
-    if (_currentUser == null) return [];
-    
-    return AppData.getNotificationsByUserId(_currentUser!.id);
+    // Mock data - dalam implementasi nyata diambil dari API
+    return [
+      NotificationModel(
+        id: '1',
+        userId: _currentUser?.id ?? '1',
+        title: 'NSFW Content Detected',
+        body: 'Gambar NSFW terdeteksi pada scan terbaru',
+        type: 'detection',
+        isRead: false,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
+      ),
+      NotificationModel(
+        id: '2',
+        userId: _currentUser?.id ?? '1',
+        title: 'Scan Complete',
+        body: 'Scan selesai - 15 gambar aman terdeteksi',
+        type: 'detection',
+        isRead: false,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+    ];
   }
 
-  /// Fungsi untuk mendapatkan notifikasi yang belum dibaca
+  /// Get unread notifications
   List<NotificationModel> getUnreadNotifications() {
-    if (_currentUser == null) return [];
-    
-    return AppData.getUnreadNotifications(_currentUser!.id);
+    return getNotifications().where((notification) => !notification.isRead).toList();
   }
 
-  /// Fungsi untuk mendapatkan tips keamanan
+  /// Get security tips
   List<String> getSecurityTips() {
-    return AppData.securityTips;
+    return [
+      'Selalu verifikasi konten sebelum membagikan',
+      'Gunakan filter NSFW untuk keamanan ekstra',
+      'Periksa source gambar sebelum menggunakan',
+      'Laporkan konten yang mencurigakan',
+      'Backup data deteksi secara berkala',
+    ];
   }
 
-  /// Fungsi untuk reset instance (untuk testing)
+  /// Reset service (untuk testing)
   void reset() {
     _currentUser = null;
+    _authToken = null;
+  }
+
+  /// Check if user is authenticated
+  bool get isAuthenticated => _currentUser != null && _authToken != null;
+
+  /// Get authorization headers
+  Map<String, String> get authHeaders {
+    if (_authToken == null) {
+      return {'Content-Type': 'application/json'};
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_authToken',
+    };
   }
 }
