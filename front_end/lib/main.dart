@@ -49,20 +49,23 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
         GetPage(name: '/login', page: () => const LoginScreen()),
         GetPage(name: '/register', page: () => const RegisterScreen()),
-        GetPage(name: '/forgot-password', page: () => const ForgotPasswordScreen()),
+        GetPage(
+          name: '/forgot-password',
+          page: () => const ForgotPasswordScreen(),
+        ),
         GetPage(name: '/home', page: () => const HomeScreen()),
         GetPage(name: '/profile', page: () => const ProfileScreen()),
         GetPage(name: '/notifications', page: () => const NotificationScreen()),
         GetPage(name: '/history', page: () => const HistoryDetectionScreen()),
         GetPage(
-          name: '/history-detail', 
+          name: '/history-detail',
           page: () {
             final args = Get.arguments as Map<String, dynamic>? ?? {};
             return HistoryDetailScreen(
               title: args['title'] ?? 'History Detail',
               type: args['type'] ?? 'weekly',
             );
-          }
+          },
         ),
       ],
     );
