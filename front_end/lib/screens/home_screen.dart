@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../../../../../MyBook Hype AMD/Downloads/RfleFly-Front-main/RfleFly-Front-main/raflefly_front/lib/services/notification_service.dart';
+import '../services/notification_service.dart';
 import 'history_detail_screen.dart';
-import '../../../../../../../MyBook Hype AMD/Downloads/RfleFly-Front-main/RfleFly-Front-main/raflefly_front/lib/screens/notification_screen.dart';
+import 'notification_screen.dart';
 import 'history_detection_screen.dart';
 import 'dart:async';
 
