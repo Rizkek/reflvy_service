@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 
 class AuthService {
-  static const String _baseUrl = 'http://localhost:8080/api'; // Update with your Go backend URL
+  static const String _baseUrl =
+      'http://localhost:8080/api'; // Update with your Go backend URL
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
@@ -43,7 +44,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_tokenKey, token);
       await prefs.setString(_userKey, jsonEncode(user.toJson()));
-      
+
       _currentUser = user;
       _authToken = token;
     } catch (e) {
@@ -57,7 +58,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
-      
+
       _currentUser = null;
       _authToken = null;
     } catch (e) {
@@ -66,16 +67,21 @@ class AuthService {
   }
 
   /// Login function
-  Future<Map<String, dynamic>> login(String emailOrUsername, String password) async {
+  Future<Map<String, dynamic>> login(
+    String emailOrUsername,
+    String password,
+  ) async {
     try {
       // Untuk demo, gunakan mock data
       // Dalam implementasi nyata, ganti dengan API call ke backend Go
-      await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
+      await Future.delayed(
+        const Duration(seconds: 1),
+      ); // Simulate network delay
 
       // Mock login validation
-      if ((emailOrUsername == 'admin@example.com' || emailOrUsername == 'admin') && 
+      if ((emailOrUsername == 'admin@example.com' ||
+              emailOrUsername == 'admin') &&
           password == 'admin123') {
-        
         final mockUser = UserModel(
           id: '1',
           email: 'admin@example.com',
@@ -88,7 +94,7 @@ class AuthService {
         );
 
         const mockToken = 'mock_jwt_token_123456789';
-        
+
         await _saveUserData(mockUser, mockToken);
 
         return {
@@ -150,10 +156,7 @@ class AuthService {
       // Dalam implementasi nyata, bisa menambah API call untuk invalidate token
       await _clearUserData();
 
-      return {
-        'success': true,
-        'message': 'Logout berhasil',
-      };
+      return {'success': true, 'message': 'Logout berhasil'};
     } catch (e) {
       return {
         'success': false,
@@ -175,10 +178,7 @@ class AuthService {
   }) async {
     try {
       if (_currentUser == null) {
-        return {
-          'success': false,
-          'message': 'User tidak ditemukan',
-        };
+        return {'success': false, 'message': 'User tidak ditemukan'};
       }
 
       // Simulate API call
@@ -276,7 +276,9 @@ class AuthService {
 
   /// Get unread notifications
   List<NotificationModel> getUnreadNotifications() {
-    return getNotifications().where((notification) => !notification.isRead).toList();
+    return getNotifications()
+        .where((notification) => !notification.isRead)
+        .toList();
   }
 
   /// Get security tips

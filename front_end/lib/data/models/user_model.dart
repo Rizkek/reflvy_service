@@ -27,8 +27,12 @@ class UserModel {
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       profileImage: json['profile_image'],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updated_at'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 

@@ -30,7 +30,9 @@ class DetectionHistoryModel {
       isNsfw: json['is_nsfw'] ?? false,
       confidence: (json['confidence'] ?? 0.0).toDouble(),
       predictions: Map<String, double>.from(json['predictions'] ?? {}),
-      detectedAt: DateTime.parse(json['detected_at'] ?? DateTime.now().toIso8601String()),
+      detectedAt: DateTime.parse(
+        json['detected_at'] ?? DateTime.now().toIso8601String(),
+      ),
       status: json['status'] ?? 'processed',
     );
   }

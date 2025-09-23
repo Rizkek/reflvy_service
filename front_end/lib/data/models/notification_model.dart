@@ -30,7 +30,9 @@ class NotificationModel {
       type: json['type'] ?? 'update',
       data: json['data'],
       isRead: json['is_read'] ?? false,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
       readAt: json['read_at'] != null ? DateTime.parse(json['read_at']) : null,
     );
   }
@@ -74,10 +76,7 @@ class NotificationModel {
   }
 
   NotificationModel markAsRead() {
-    return copyWith(
-      isRead: true,
-      readAt: DateTime.now(),
-    );
+    return copyWith(isRead: true, readAt: DateTime.now());
   }
 
   String get timeAgo {
