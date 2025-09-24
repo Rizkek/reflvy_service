@@ -1,23 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 import 'onboarding_screen.dart';
 
-// Provider untuk mengelola state loading splash screen
-final splashLoadingProvider = StateProvider<bool>((ref) => true);
-
-// Provider untuk mengelola animasi splash screen
-final splashAnimationProvider = StateProvider<double>((ref) => 0.0);
-
-class SplashScreen extends ConsumerStatefulWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen>
+class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -27,7 +19,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
 
-    // Set status bar menjadi transparan untuk tampilan yang lebih bersih
+    // Set status bar to transparent
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -35,15 +27,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
 
-    // Inisialisasi animasi dengan durasi yang lebih cepat
+    // Initialize animations - faster loading
     _animationController = AnimationController(
-      duration: const Duration(
-          milliseconds:
-              1200), // Dikurangi dari 2000ms untuk loading yang lebih cepat
+      duration: const Duration(milliseconds: 1200), // Reduced from 2000ms
       vsync: this,
     );
 
-    // Animasi fade in untuk efek muncul yang halus
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -51,7 +40,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
 
-    // Animasi skala untuk efek zoom yang menarik
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -59,31 +47,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
 
-    // Mulai animasi
+    // Start animation
     _animationController.forward();
 
-    // Update provider animation state
-    _animationController.addListener(() {
-      ref.read(splashAnimationProvider.notifier).state =
-          _animationController.value;
-    });
-
-    // Navigasi ke halaman selanjutnya setelah delay
+    // Navigate to next screen after delay
     _navigateToNext();
   }
 
-  /// Fungsi untuk navigasi ke halaman onboarding menggunakan GetX
   void _navigateToNext() {
     Future.delayed(const Duration(milliseconds: 1800), () {
-      // Dikurangi dari 3000ms untuk transisi yang lebih cepat
+      // Reduced from 3000ms
       if (mounted) {
-        // Update loading state
-        ref.read(splashLoadingProvider.notifier).state = false;
-
-        // Navigasi menggunakan GetX untuk transisi yang lebih smooth
-        Get.off(() => const OnboardingScreen(),
-            transition: Transition.fadeIn,
-            duration: const Duration(milliseconds: 500));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
       }
     });
   }
@@ -96,21 +74,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Watch provider untuk reactive updates
-    final isLoading = ref.watch(splashLoadingProvider);
-
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          // Gradient yang menarik untuk background splash
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF4A90E2), // Biru muda
-              Color(0xFF357ABD), // Biru tua
+              Color(0xFF4A90E2), // Light blue
+              Color(0xFF357ABD), // Darker blue
             ],
           ),
         ),
@@ -124,7 +98,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Container untuk logo aplikasi
+                    // Logo Container
                     Container(
                       width: 180,
                       height: 180,
@@ -134,7 +108,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         height: 140,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
-                          // Widget fallback jika gambar tidak ditemukan - hanya ikon sederhana
+                          // Fallback widget if image not found - simple icon only
                           return const Icon(
                             Icons.shield,
                             size: 80,
@@ -146,7 +120,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                     const SizedBox(height: 40),
 
-                    // Tagline aplikasi
+                    // Tagline
                     const Text(
                       'Your Privacy Guardian',
                       style: TextStyle(
@@ -158,17 +132,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                     const SizedBox(height: 60),
 
-                    // Indikator loading yang responsif terhadap state
-                    if (isLoading)
-                      const SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                          strokeWidth: 3,
-                        ),
+                    // Loading indicator
+                    const SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 3,
                       ),
+                    ),
                   ],
                 ),
               ),
