@@ -29,6 +29,13 @@ class AuthController extends GetConnect {
   }
 
   // Example register API logic using GetConnect
+  /*
+  nanti logika registernya adalah
+  1. pertamanya hit ke firebase abis dari firebase dapet token jwt, gender, usia
+  2. fe dapet 3 hal itu terus baru hit ke backend golang
+  3. kalo udah berhasil hit be golang nanti baru fe hit ulang ke firebase buat verifikasi email
+  kenapa kok gk di backend aja? biar komputasinya gk berat cenah
+  */
   static Future<bool> register({
     required String username,
     required String email,
