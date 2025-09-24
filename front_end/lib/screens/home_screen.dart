@@ -4,7 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../services/notification_service.dart';
 import 'history_detail_screen.dart';
 import 'notification_screen.dart';
-import 'history_detection_screen.dart';
+import 'history_detection_screen.dart'; 
 import 'dart:async';
 
 class HomeScreen extends StatefulWidget {
