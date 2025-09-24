@@ -1,7 +1,18 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:ui';
-import 'notification_history_service.dart';
+
+// Provider untuk NotificationService
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService();
+});
+
+// Provider untuk status permission notifikasi
+final notificationPermissionProvider = StateProvider<bool>((ref) => false);
+
+// Provider untuk status inisialisasi notifikasi
+final notificationInitializedProvider = StateProvider<bool>((ref) => false);
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -11,47 +22,57 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  /// Inisialisasi service notifikasi
   Future<void> initialize() async {
-    // Android initialization
+    // Konfigurasi untuk Android
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS initialization
+    // Konfigurasi untuk iOS
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
+    // Inisialisasi plugin notifikasi
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap
-        print('Notification tapped: ${response.payload}');
+        // Handle ketika notifikasi di-tap
+        _handleNotificationTap(response);
       },
     );
 
-    // Request notification permissions
+    // Minta permission untuk notifikasi
     await _requestPermissions();
   }
 
+  /// Meminta permission notifikasi dari user
   Future<void> _requestPermissions() async {
-    // Request notification permission
+    // Minta permission notifikasi
     await Permission.notification.request();
 
-    // For Android 13+, request POST_NOTIFICATIONS permission
+    // Untuk Android 13+, minta permission POST_NOTIFICATIONS
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
     }
   }
 
+  /// Handle ketika notifikasi di-tap
+  void _handleNotificationTap(NotificationResponse response) {
+    print('Notifikasi di-tap: ${response.payload}');
+    // TODO: Implementasi navigasi berdasarkan payload
+  }
+
+  /// Tampilkan notifikasi instan
   Future<void> showInstantNotification({
     required String title,
     required String body,
@@ -61,24 +82,24 @@ class NotificationService {
   }) async {
     AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-          'instant_notifications',
-          'Instant Notifications',
-          channelDescription: 'Real-time threat detection notifications',
-          importance: importance,
-          priority: priority,
-          showWhen: true,
-          enableVibration: true,
-          playSound: true,
-          icon: '@mipmap/ic_launcher',
-          styleInformation: const BigTextStyleInformation(''),
-        );
+      'instant_notifications',
+      'Notifikasi Instan',
+      channelDescription: 'Notifikasi real-time untuk deteksi ancaman',
+      importance: importance,
+      priority: priority,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      icon: '@mipmap/ic_launcher',
+      styleInformation: const BigTextStyleInformation(''),
+    );
 
     const DarwinNotificationDetails iosNotificationDetails =
         DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        );
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
 
     NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
@@ -94,6 +115,7 @@ class NotificationService {
     );
   }
 
+  /// Tampilkan notifikasi ancaman berdasarkan level
   Future<void> showThreatNotification({
     required String threatLevel,
     required String appName,
@@ -104,6 +126,7 @@ class NotificationService {
     Importance importance;
     Priority priority;
 
+    // Tentukan pesan berdasarkan level ancaman
     switch (threatLevel) {
       case 'low':
         title = '⚠️ Deteksi Ringan';
@@ -136,43 +159,35 @@ class NotificationService {
         priority = Priority.low;
     }
 
-    // Store in notification history
-    NotificationHistoryService().addThreatNotification(
-      threatLevel: threatLevel,
-      appName: appName,
-      contentType: contentType,
-      action: threatLevel == 'high'
-          ? 'Aplikasi di Blokir'
-          : 'Peringatan Ditampilkan',
-    );
+    // Simpan ke riwayat notifikasi - akan dihandle oleh provider yang memanggil
 
-    // Create custom notification channel for threats
+    // Buat channel notifikasi khusus untuk ancaman
     AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-          'threat_notifications',
-          'Threat Alerts',
-          channelDescription: 'Critical threat detection alerts',
-          importance: importance,
-          priority: priority,
-          showWhen: true,
-          enableVibration: true,
-          playSound: true,
-          icon: '@mipmap/ic_launcher',
-          styleInformation: BigTextStyleInformation(
-            body,
-            contentTitle: title,
-            summaryText: 'RafleFly Security',
-          ),
-          color: Color(_getThreatColor(threatLevel) ?? 0xFF10B981),
-        );
+      'threat_notifications',
+      'Peringatan Ancaman',
+      channelDescription: 'Notifikasi peringatan deteksi ancaman kritis',
+      importance: importance,
+      priority: priority,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      icon: '@mipmap/ic_launcher',
+      styleInformation: BigTextStyleInformation(
+        body,
+        contentTitle: title,
+        summaryText: 'REFLVY Security',
+      ),
+      color: Color(_getThreatColor(threatLevel) ?? 0xFF10B981),
+    );
 
     const DarwinNotificationDetails iosNotificationDetails =
         DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          interruptionLevel: InterruptionLevel.critical,
-        );
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.critical,
+    );
 
     NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
@@ -188,18 +203,17 @@ class NotificationService {
     );
   }
 
+  /// Tampilkan notifikasi status monitoring
   Future<void> showMonitoringStatusNotification({
     required bool isActive,
   }) async {
-    String title = isActive
-        ? '🛡️ Monitoring Aktif'
-        : '⏹️ Monitoring Dihentikan';
+    String title =
+        isActive ? '🛡️ Monitoring Aktif' : '⏹️ Monitoring Dihentikan';
     String body = isActive
         ? 'Sistem sedang memantau konten berbahaya secara real-time'
         : 'Perlindungan real-time telah dinonaktifkan';
 
-    // Store in notification history
-    NotificationHistoryService().addMonitoringNotification(isActive: isActive);
+    // Simpan ke riwayat notifikasi - akan dihandle oleh provider yang memanggil
 
     await showInstantNotification(
       title: title,
@@ -210,27 +224,83 @@ class NotificationService {
     );
   }
 
-  // Helper method to get color based on threat level
+  /// Tampilkan notifikasi sukses
+  Future<void> showSuccessNotification({
+    required String title,
+    required String message,
+  }) async {
+    await showInstantNotification(
+      title: '✅ $title',
+      body: message,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      payload: 'success',
+    );
+  }
+
+  /// Tampilkan notifikasi error
+  Future<void> showErrorNotification({
+    required String title,
+    required String message,
+  }) async {
+    await showInstantNotification(
+      title: '❌ $title',
+      body: message,
+      importance: Importance.high,
+      priority: Priority.high,
+      payload: 'error',
+    );
+  }
+
+  /// Tampilkan notifikasi info
+  Future<void> showInfoNotification({
+    required String title,
+    required String message,
+  }) async {
+    await showInstantNotification(
+      title: 'ℹ️ $title',
+      body: message,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      payload: 'info',
+    );
+  }
+
+  /// Helper method untuk mendapatkan warna berdasarkan level ancaman
   int? _getThreatColor(String threatLevel) {
     switch (threatLevel) {
       case 'low':
-        return 0xFF10B981; // Green
+        return 0xFF10B981; // Hijau
       case 'medium':
-        return 0xFFEA580C; // Orange
+        return 0xFFEA580C; // Oranye
       case 'high':
-        return 0xFFDC2626; // Red
+        return 0xFFDC2626; // Merah
       case 'critical':
-        return 0xFF7C3AED; // Purple
+        return 0xFF7C3AED; // Ungu
       default:
-        return 0xFF10B981; // Green
+        return 0xFF10B981; // Hijau
     }
   }
 
+  /// Batalkan semua notifikasi
   Future<void> cancelAllNotifications() async {
     await _flutterLocalNotificationsPlugin.cancelAll();
   }
 
+  /// Batalkan notifikasi berdasarkan ID
   Future<void> cancelNotification(int id) async {
     await _flutterLocalNotificationsPlugin.cancel(id);
+  }
+
+  /// Cek apakah permission notifikasi sudah diberikan
+  Future<bool> hasPermission() async {
+    final status = await Permission.notification.status;
+    return status.isGranted;
+  }
+
+  /// Minta permission notifikasi
+  Future<bool> requestPermission() async {
+    final status = await Permission.notification.request();
+    return status.isGranted;
   }
 }

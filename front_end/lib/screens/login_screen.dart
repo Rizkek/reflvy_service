@@ -1,19 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'register_screen.dart';
+import 'home_screen.dart';
+import 'forgot_password_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+// Provider untuk mengelola state email
+final emailProvider = StateProvider<String>((ref) => '');
+
+// Provider untuk mengelola state password
+final passwordProvider = StateProvider<String>((ref) => '');
+
+// Provider untuk mengelola state loading
+final loginLoadingProvider = StateProvider<bool>((ref) => false);
+
+// Provider untuk mengelola visibility password
+final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
+
+// Provider untuk form key
+final loginFormKeyProvider =
+    Provider<GlobalKey<FormState>>((ref) => GlobalKey<FormState>());
+
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _isLoading = false;
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  late GlobalKey<FormState> _formKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _formKey = ref.read(loginFormKeyProvider);
+  }
 
   @override
   void dispose() {
@@ -22,29 +49,49 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Fungsi untuk menangani proses sign in
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+      // Set loading state
+      ref.read(loginLoadingProvider.notifier).state = true;
 
-      // TODO: Implement Firebase Auth login
-      // Simulasi loading untuk sekarang
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        // TODO: Implementasi Firebase Auth login
+        // Simulasi loading untuk saat ini
+        await Future.delayed(const Duration(seconds: 2));
 
-      setState(() {
-        _isLoading = false;
-      });
+        // Update provider dengan nilai yang dimasukkan
+        ref.read(emailProvider.notifier).state = _emailController.text;
+        ref.read(passwordProvider.notifier).state = _passwordController.text;
 
-      // Navigate to home screen
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        // Navigasi ke halaman home menggunakan GetX
+        Get.off(() => const HomeScreen(),
+            transition: Transition.fade,
+            duration: const Duration(milliseconds: 500));
+      } catch (e) {
+        // Tampilkan error message menggunakan GetX snackbar
+        Get.snackbar(
+          'Error',
+          'Gagal masuk: \${e.toString()}',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      } finally {
+        // Reset loading state
+        if (mounted) {
+          ref.read(loginLoadingProvider.notifier).state = false;
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch providers untuk reactive updates
+    final isLoading = ref.watch(loginLoadingProvider);
+    final obscurePassword = ref.watch(passwordVisibilityProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -55,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 60),
 
-              // Logo and App Name
+              // Logo dan nama aplikasi
               Center(
                 child: Column(
                   children: [
@@ -97,13 +144,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 48),
 
-              // Login Form
+              // Form login
               Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Email Field
+                    // Field Email
                     Text(
                       'Email',
                       style: GoogleFonts.raleway(
@@ -116,6 +163,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      onChanged: (value) {
+                        ref.read(emailProvider.notifier).state = value;
+                      },
                       decoration: InputDecoration(
                         hintText: 'Masukkan email Anda',
                         hintStyle: GoogleFonts.raleway(
@@ -155,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return 'Email tidak boleh kosong';
                         }
                         if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          r'^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}\$',
                         ).hasMatch(value)) {
                           return 'Format email tidak valid';
                         }
@@ -165,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Password Field
+                    // Field Password
                     Text(
                       'Password',
                       style: GoogleFonts.raleway(
@@ -177,7 +227,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: _obscurePassword,
+                      obscureText: obscurePassword,
+                      onChanged: (value) {
+                        ref.read(passwordProvider.notifier).state = value;
+                      },
                       decoration: InputDecoration(
                         hintText: 'Masukkan password Anda',
                         hintStyle: GoogleFonts.raleway(
@@ -213,15 +266,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword
+                            obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                             color: const Color(0xFF979797),
                           ),
                           onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
+                            ref
+                                .read(passwordVisibilityProvider.notifier)
+                                .state = !obscurePassword;
                           },
                         ),
                       ),
@@ -238,12 +291,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Forgot Password Link
+                    // Link Lupa Password
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/forgot-password');
+                          Get.to(() => const ForgotPasswordScreen(),
+                              transition: Transition.rightToLeft);
                         },
                         child: Text(
                           'Lupa Password?',
@@ -258,12 +312,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Login Button
+                    // Tombol Login
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _signIn,
+                        onPressed: isLoading ? null : _signIn,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3F88EB),
                           foregroundColor: Colors.white,
@@ -272,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: _isLoading
+                        child: isLoading
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
@@ -293,7 +347,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Register Link
+                    // Link Daftar
                     Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -308,7 +362,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/register');
+                              Get.to(() => const RegisterScreen(),
+                                  transition: Transition.rightToLeft);
                             },
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,

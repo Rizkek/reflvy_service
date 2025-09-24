@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class RegisterScreen extends StatefulWidget {
+// Providers untuk mengelola state registrasi
+final registerNameProvider = StateProvider<String>((ref) => '');
+final registerEmailProvider = StateProvider<String>((ref) => '');
+final registerPasswordProvider = StateProvider<String>((ref) => '');
+final registerConfirmPasswordProvider = StateProvider<String>((ref) => '');
+final registerLoadingProvider = StateProvider<bool>((ref) => false);
+final registerPasswordVisibilityProvider = StateProvider<bool>((ref) => true);
+final registerConfirmPasswordVisibilityProvider =
+    StateProvider<bool>((ref) => true);
+final acceptTermsProvider = StateProvider<bool>((ref) => false);
+
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _isLoading = false;
-  bool _acceptTerms = false;
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  late TextEditingController _confirmPasswordController;
 
-  // Gender and birthdate fields
-  String? _selectedGender;
-  DateTime? _selectedBirthdate;
-  final List<String> _genderOptions = ['Laki-laki', 'Perempuan'];
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
 
   @override
   void dispose() {
@@ -33,116 +46,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _selectBirthdate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(
-        const Duration(days: 365 * 18),
-      ), // Default to 18 years ago
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now().subtract(
-        const Duration(days: 365 * 13),
-      ), // Minimum 13 years old
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFF3F88EB)),
-          ),
-          child: child!,
+  /// Fungsi untuk menangani proses registrasi
+  Future<void> _signUp() async {
+    if (_formKey.currentState!.validate()) {
+      final acceptTerms = ref.read(acceptTermsProvider);
+
+      if (!acceptTerms) {
+        Get.snackbar(
+          'Perhatian',
+          'Anda harus menyetujui syarat dan ketentuan',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
         );
-      },
-    );
-
-    if (picked != null && picked != _selectedBirthdate) {
-      setState(() {
-        _selectedBirthdate = picked;
-      });
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    final months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
-  Future<void> _register() async {
-    if (_formKey.currentState!.validate() &&
-        _acceptTerms &&
-        _selectedGender != null &&
-        _selectedBirthdate != null) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // TODO: Implement Firebase Auth registration
-      // Simulasi loading untuk sekarang
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Show success message and navigate to login
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Registrasi berhasil! Silakan cek email untuk verifikasi.',
-              style: GoogleFonts.raleway(),
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
+        return;
       }
-    } else if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Anda harus menyetujui syarat dan ketentuan',
-            style: GoogleFonts.raleway(),
-          ),
+
+      // Set loading state
+      ref.read(registerLoadingProvider.notifier).state = true;
+
+      try {
+        // TODO: Implementasi Firebase Auth register
+        // Simulasi loading untuk saat ini
+        await Future.delayed(const Duration(seconds: 2));
+
+        // Update providers dengan nilai yang dimasukkan
+        ref.read(registerNameProvider.notifier).state = _nameController.text;
+        ref.read(registerEmailProvider.notifier).state = _emailController.text;
+
+        // Tampilkan pesan sukses
+        Get.snackbar(
+          'Berhasil',
+          'Registrasi berhasil! Silakan login',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+
+        // Kembali ke login screen
+        Get.back();
+      } catch (e) {
+        // Tampilkan error message
+        Get.snackbar(
+          'Error',
+          'Gagal mendaftar: \${e.toString()}',
           backgroundColor: Colors.red,
-        ),
-      );
-    } else if (_selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Pilih jenis kelamin Anda',
-            style: GoogleFonts.raleway(),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else if (_selectedBirthdate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Pilih tanggal lahir Anda',
-            style: GoogleFonts.raleway(),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+          colorText: Colors.white,
+        );
+      } finally {
+        // Reset loading state
+        if (mounted) {
+          ref.read(registerLoadingProvider.notifier).state = false;
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch providers untuk reactive updates
+    final isLoading = ref.watch(registerLoadingProvider);
+    final obscurePassword = ref.watch(registerPasswordVisibilityProvider);
+    final obscureConfirmPassword =
+        ref.watch(registerConfirmPasswordVisibilityProvider);
+    final acceptTerms = ref.watch(acceptTermsProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -150,14 +116,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF181818)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Get.back(),
         ),
         title: Text(
           'Daftar Akun',
           style: GoogleFonts.raleway(
             color: const Color(0xFF181818),
             fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
@@ -168,57 +134,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
-              // Header
+              // Deskripsi
               Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3F88EB),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.person_add_rounded,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Bergabung dengan Raflefly',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Buat akun baru untuk mulai browsing aman',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF979797),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: Text(
+                  'Buat akun baru untuk melindungi pengalaman browsing Anda',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.raleway(
+                    color: const Color(0xFF979797),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
 
               const SizedBox(height: 32),
 
-              // Registration Form
+              // Form registrasi
               Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Name Field
+                    // Field Nama Lengkap
                     Text(
                       'Nama Lengkap',
                       style: GoogleFonts.raleway(
@@ -230,55 +169,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
-                      keyboardType: TextInputType.name,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan nama lengkap Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
+                      onChanged: (value) {
+                        ref.read(registerNameProvider.notifier).state = value;
+                      },
+                      decoration:
+                          _buildInputDecoration('Masukkan nama lengkap Anda'),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Nama tidak boleh kosong';
+                          return 'Nama lengkap tidak boleh kosong';
                         }
-                        if (value.length < 2) {
-                          return 'Nama minimal 2 karakter';
+                        if (value.length < 3) {
+                          return 'Nama lengkap minimal 3 karakter';
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // Email Field
+                    // Field Email
                     Text(
                       'Email',
                       style: GoogleFonts.raleway(
@@ -291,56 +200,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan email Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
+                      onChanged: (value) {
+                        ref.read(registerEmailProvider.notifier).state = value;
+                      },
+                      decoration: _buildInputDecoration('Masukkan email Anda'),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Email tidak boleh kosong';
                         }
-                        if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)) {
+                        if (!RegExp(r'^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}\$')
+                            .hasMatch(value)) {
                           return 'Format email tidak valid';
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // Password Field
+                    // Field Password
                     Text(
                       'Password',
                       style: GoogleFonts.raleway(
@@ -352,51 +230,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        hintText: 'Buat password yang kuat',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
+                      obscureText: obscurePassword,
+                      onChanged: (value) {
+                        ref.read(registerPasswordProvider.notifier).state =
+                            value;
+                      },
+                      decoration:
+                          _buildInputDecoration('Masukkan password Anda')
+                              .copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword
+                            obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                             color: const Color(0xFF979797),
                           ),
                           onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
+                            ref
+                                .read(
+                                    registerPasswordVisibilityProvider.notifier)
+                                .state = !obscurePassword;
                           },
                         ),
                       ),
@@ -404,21 +257,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Password tidak boleh kosong';
                         }
-                        if (value.length < 8) {
-                          return 'Password minimal 8 karakter';
-                        }
-                        if (!RegExp(
-                          r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)',
-                        ).hasMatch(value)) {
-                          return 'Password harus mengandung huruf besar, kecil, dan angka';
+                        if (value.length < 6) {
+                          return 'Password minimal 6 karakter';
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // Confirm Password Field
+                    // Field Konfirmasi Password
                     Text(
                       'Konfirmasi Password',
                       style: GoogleFonts.raleway(
@@ -430,52 +278,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan ulang password Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
+                      obscureText: obscureConfirmPassword,
+                      onChanged: (value) {
+                        ref
+                            .read(registerConfirmPasswordProvider.notifier)
+                            .state = value;
+                      },
+                      decoration:
+                          _buildInputDecoration('Konfirmasi password Anda')
+                              .copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword
+                            obscureConfirmPassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                             color: const Color(0xFF979797),
                           ),
                           onPressed: () {
-                            setState(() {
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword;
-                            });
+                            ref
+                                .read(registerConfirmPasswordVisibilityProvider
+                                    .notifier)
+                                .state = !obscureConfirmPassword;
                           },
                         ),
                       ),
@@ -484,184 +307,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return 'Konfirmasi password tidak boleh kosong';
                         }
                         if (value != _passwordController.text) {
-                          return 'Password tidak cocok';
+                          return 'Password tidak sama';
                         }
                         return null;
                       },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Gender Selection
-                    Text(
-                      'Jenis Kelamin',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: _selectedGender,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih jenis kelamin',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      items: _genderOptions.map((String gender) {
-                        return DropdownMenuItem<String>(
-                          value: gender,
-                          child: Text(
-                            gender,
-                            style: GoogleFonts.raleway(
-                              fontSize: 14,
-                              color: const Color(0xFF181818),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedGender = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Pilih jenis kelamin';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Birthdate Selection
-                    Text(
-                      'Tanggal Lahir',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _selectBirthdate,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: _selectedBirthdate == null
-                                ? const Color(0xFFE0E0E0)
-                                : const Color(0xFF3F88EB),
-                            width: _selectedBirthdate == null ? 1 : 2,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _selectedBirthdate == null
-                                  ? 'Pilih tanggal lahir'
-                                  : _formatDate(_selectedBirthdate!),
-                              style: GoogleFonts.raleway(
-                                color: _selectedBirthdate == null
-                                    ? const Color(0xFF979797)
-                                    : const Color(0xFF181818),
-                                fontSize: 14,
-                              ),
-                            ),
-                            const Icon(
-                              Icons.calendar_today,
-                              color: Color(0xFF979797),
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Terms and Conditions Checkbox
+                    // Checkbox Syarat dan Ketentuan
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Checkbox(
-                          value: _acceptTerms,
+                          value: acceptTerms,
                           onChanged: (value) {
-                            setState(() {
-                              _acceptTerms = value ?? false;
-                            });
+                            ref.read(acceptTermsProvider.notifier).state =
+                                value ?? false;
                           },
                           activeColor: const Color(0xFF3F88EB),
                         ),
                         Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: RichText(
-                              text: TextSpan(
-                                style: GoogleFonts.raleway(
-                                  color: const Color(0xFF979797),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                children: [
-                                  const TextSpan(text: 'Saya menyetujui '),
-                                  TextSpan(
-                                    text: 'Syarat dan Ketentuan',
-                                    style: GoogleFonts.raleway(
-                                      color: const Color(0xFF3F88EB),
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                  const TextSpan(text: ' serta '),
-                                  TextSpan(
-                                    text: 'Kebijakan Privasi',
-                                    style: GoogleFonts.raleway(
-                                      color: const Color(0xFF3F88EB),
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ],
+                          child: Text.rich(
+                            TextSpan(
+                              text: 'Saya menyetujui ',
+                              style: GoogleFonts.raleway(
+                                color: const Color(0xFF979797),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
+                              children: [
+                                TextSpan(
+                                  text: 'Syarat dan Ketentuan',
+                                  style: GoogleFonts.raleway(
+                                    color: const Color(0xFF3F88EB),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' dan ',
+                                  style: GoogleFonts.raleway(
+                                    color: const Color(0xFF979797),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: 'Kebijakan Privasi',
+                                  style: GoogleFonts.raleway(
+                                    color: const Color(0xFF3F88EB),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -670,12 +372,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Register Button
+                    // Tombol Daftar
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _register,
+                        onPressed: isLoading ? null : _signUp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3F88EB),
                           foregroundColor: Colors.white,
@@ -684,7 +386,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: _isLoading
+                        child: isLoading
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
@@ -705,7 +407,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Login Link
+                    // Link ke Login
                     Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -719,9 +421,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/login');
-                            },
+                            onPressed: () => Get.back(),
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: Size.zero,
@@ -748,6 +448,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Helper function untuk membuat InputDecoration yang konsisten
+  InputDecoration _buildInputDecoration(String hintText) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: GoogleFonts.raleway(
+        color: const Color(0xFF979797),
+        fontSize: 14,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF3F88EB), width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
   }
 }

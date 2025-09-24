@@ -1,93 +1,278 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class NotificationHistoryService {
-  static final NotificationHistoryService _instance =
-      NotificationHistoryService._internal();
-  factory NotificationHistoryService() => _instance;
-  NotificationHistoryService._internal();
+// Model untuk notifikasi history
+class NotificationHistoryItem {
+  final int id;
+  final String title;
+  final String message;
+  final String time;
+  final String date;
+  final String type;
+  final String level;
+  final IconData icon;
+  final Color color;
+  final bool isRead;
+  final String app;
+  final String? action;
+  final DateTime timestamp;
 
-  // In-memory notification storage (in production, use database like SQLite)
-  static List<Map<String, dynamic>> _notifications = [];
+  NotificationHistoryItem({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.time,
+    required this.date,
+    required this.type,
+    required this.level,
+    required this.icon,
+    required this.color,
+    required this.isRead,
+    required this.app,
+    this.action,
+    required this.timestamp,
+  });
 
-  // Get all notifications
-  List<Map<String, dynamic>> getAllNotifications() {
-    return List.from(_notifications.reversed); // Show newest first
+  NotificationHistoryItem copyWith({bool? isRead}) {
+    return NotificationHistoryItem(
+      id: id,
+      title: title,
+      message: message,
+      time: time,
+      date: date,
+      type: type,
+      level: level,
+      icon: icon,
+      color: color,
+      isRead: isRead ?? this.isRead,
+      app: app,
+      action: action,
+      timestamp: timestamp,
+    );
+  }
+}
+
+// Provider untuk daftar history notifikasi
+final notificationHistoryProvider = StateNotifierProvider<
+    NotificationHistoryNotifier, List<NotificationHistoryItem>>((ref) {
+  return NotificationHistoryNotifier();
+});
+
+// Provider untuk NotificationHistoryService
+final notificationHistoryServiceProvider =
+    Provider<NotificationHistoryService>((ref) {
+  return NotificationHistoryService(ref);
+});
+
+class NotificationHistoryNotifier
+    extends StateNotifier<List<NotificationHistoryItem>> {
+  NotificationHistoryNotifier() : super([]);
+
+  void addNotification(NotificationHistoryItem notification) {
+    state = [notification, ...state];
+
+    // Batasi maksimal 100 notifikasi untuk mencegah masalah memori
+    if (state.length > 100) {
+      state = state.take(100).toList();
+    }
   }
 
-  // Add new notification
+  void markAsRead(int id) {
+    state = state.map((notification) {
+      return notification.id == id
+          ? notification.copyWith(isRead: true)
+          : notification;
+    }).toList();
+  }
+
+  void markAllAsRead() {
+    state = state
+        .map((notification) => notification.copyWith(isRead: true))
+        .toList();
+  }
+
+  void clearAll() {
+    state = [];
+  }
+
+  void removeNotification(int id) {
+    state = state.where((notification) => notification.id != id).toList();
+  }
+}
+
+class NotificationHistoryService {
+  final Ref ref;
+
+  NotificationHistoryService(this.ref);
+
+  /// Tambah notifikasi baru
   void addNotification({
     required String title,
     required String message,
-    required String type, // 'threat', 'warning', 'info'
-    required String level, // 'low', 'medium', 'high'
+    required String type, // 'threat', 'warning', 'info', 'success'
+    required String level, // 'low', 'medium', 'high', 'critical'
     required String app,
     String? action,
   }) {
-    final notification = {
-      'id': DateTime.now().millisecondsSinceEpoch,
-      'title': title,
-      'message': message,
-      'time': _formatTime(DateTime.now()),
-      'date': _formatDate(DateTime.now()),
-      'type': type,
-      'level': level,
-      'icon': _getIconForType(type),
-      'color': _getColorForLevel(level),
-      'isRead': false,
-      'app': app,
-      'action': action,
-      'timestamp': DateTime.now(),
-    };
+    final notification = NotificationHistoryItem(
+      id: DateTime.now().millisecondsSinceEpoch,
+      title: title,
+      message: message,
+      time: _formatTime(DateTime.now()),
+      date: _formatDate(DateTime.now()),
+      type: type,
+      level: level,
+      icon: _getIconForType(type),
+      color: _getColorForLevel(level),
+      isRead: false,
+      app: app,
+      action: action,
+      timestamp: DateTime.now(),
+    );
 
-    _notifications.add(notification);
-
-    // Keep only last 100 notifications to prevent memory issues
-    if (_notifications.length > 100) {
-      _notifications.removeAt(0);
-    }
+    ref
+        .read(notificationHistoryProvider.notifier)
+        .addNotification(notification);
   }
 
-  // Mark notification as read
+  /// Tambah notifikasi ancaman
+  void addThreatNotification({
+    required String threatLevel,
+    required String appName,
+    required String contentType,
+    required String action,
+  }) {
+    String title;
+    String message;
+
+    switch (threatLevel) {
+      case 'low':
+        title = 'Deteksi Ringan';
+        message = '$appName: $contentType terdeteksi';
+        break;
+      case 'medium':
+        title = 'Peringatan Sedang';
+        message = '$appName: $contentType - Waspada!';
+        break;
+      case 'high':
+        title = 'Ancaman Tinggi';
+        message = '$appName: $contentType - Segera tutup!';
+        break;
+      case 'critical':
+        title = 'BAHAYA KRITIS!';
+        message = '$appName: $contentType - NSFW TERDETEKSI!';
+        break;
+      default:
+        title = 'Sistem Aman';
+        message = 'Monitoring berjalan normal';
+    }
+
+    addNotification(
+      title: title,
+      message: message,
+      type: 'threat',
+      level: threatLevel,
+      app: appName,
+      action: action,
+    );
+  }
+
+  /// Tambah notifikasi monitoring
+  void addMonitoringNotification({required bool isActive}) {
+    addNotification(
+      title: isActive ? 'Monitoring Aktif' : 'Monitoring Dihentikan',
+      message: isActive
+          ? 'Sistem sedang memantau konten berbahaya secara real-time'
+          : 'Perlindungan real-time telah dinonaktifkan',
+      type: 'info',
+      level: isActive ? 'medium' : 'low',
+      app: 'REFLVY System',
+      action: isActive ? 'Monitoring dimulai' : 'Monitoring dihentikan',
+    );
+  }
+
+  /// Tambah notifikasi sukses
+  void addSuccessNotification({
+    required String title,
+    required String message,
+    required String app,
+  }) {
+    addNotification(
+      title: title,
+      message: message,
+      type: 'success',
+      level: 'low',
+      app: app,
+    );
+  }
+
+  /// Tambah notifikasi error
+  void addErrorNotification({
+    required String title,
+    required String message,
+    required String app,
+  }) {
+    addNotification(
+      title: title,
+      message: message,
+      type: 'error',
+      level: 'high',
+      app: app,
+    );
+  }
+
+  /// Tandai notifikasi sebagai dibaca
   void markAsRead(int id) {
-    int index = _notifications.indexWhere((notif) => notif['id'] == id);
-    if (index != -1) {
-      _notifications[index]['isRead'] = true;
-    }
+    ref.read(notificationHistoryProvider.notifier).markAsRead(id);
   }
 
-  // Mark all notifications as read
+  /// Tandai semua notifikasi sebagai dibaca
   void markAllAsRead() {
-    for (var notification in _notifications) {
-      notification['isRead'] = true;
-    }
+    ref.read(notificationHistoryProvider.notifier).markAllAsRead();
   }
 
-  // Clear all notifications
+  /// Hapus semua notifikasi
   void clearAll() {
-    _notifications.clear();
+    ref.read(notificationHistoryProvider.notifier).clearAll();
   }
 
-  // Get unread count
+  /// Hapus notifikasi berdasarkan ID
+  void removeNotification(int id) {
+    ref.read(notificationHistoryProvider.notifier).removeNotification(id);
+  }
+
+  /// Dapatkan semua notifikasi
+  List<NotificationHistoryItem> getAllNotifications() {
+    return ref.read(notificationHistoryProvider);
+  }
+
+  /// Dapatkan jumlah notifikasi yang belum dibaca
   int getUnreadCount() {
-    return _notifications.where((n) => !n['isRead']).length;
+    final notifications = ref.read(notificationHistoryProvider);
+    return notifications.where((n) => !n.isRead).length;
   }
 
-  // Get today's notifications count
+  /// Dapatkan jumlah notifikasi hari ini
   int getTodayCount() {
     final today = _formatDate(DateTime.now());
-    return _notifications.where((n) => n['date'] == today).length;
+    final notifications = ref.read(notificationHistoryProvider);
+    return notifications.where((n) => n.date == today).length;
   }
 
-  // Get threat notifications count
+  /// Dapatkan jumlah notifikasi ancaman
   int getThreatCount() {
-    return _notifications.where((n) => n['level'] == 'high').length;
+    final notifications = ref.read(notificationHistoryProvider);
+    return notifications
+        .where((n) => n.level == 'high' || n.level == 'critical')
+        .length;
   }
 
-  // Helper methods
+  /// Helper: Format waktu
   String _formatTime(DateTime dateTime) {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
+  /// Helper: Format tanggal
   String _formatDate(DateTime dateTime) {
     const months = [
       'Jan',
@@ -101,115 +286,42 @@ class NotificationHistoryService {
       'Sep',
       'Oct',
       'Nov',
-      'Dec',
+      'Dec'
     ];
     return '${dateTime.day} ${months[dateTime.month - 1]} ${dateTime.year}';
   }
 
+  /// Helper: Dapatkan ikon berdasarkan tipe
   IconData _getIconForType(String type) {
     switch (type) {
       case 'threat':
-        return Icons.dangerous;
+        return Icons.security;
       case 'warning':
         return Icons.warning;
       case 'info':
         return Icons.info;
-      case 'monitoring':
-        return Icons.security;
-      case 'block':
-        return Icons.block;
+      case 'success':
+        return Icons.check_circle;
+      case 'error':
+        return Icons.error;
       default:
         return Icons.notifications;
     }
   }
 
+  /// Helper: Dapatkan warna berdasarkan level
   Color _getColorForLevel(String level) {
     switch (level) {
-      case 'high':
-        return Colors.red;
+      case 'low':
+        return Colors.green;
       case 'medium':
         return Colors.orange;
-      case 'low':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  // Helper method to add threat notification with detection tracking
-  void addThreatNotification({
-    required String threatLevel,
-    required String appName,
-    required String contentType,
-    String? action,
-  }) {
-    String title;
-    String message;
-    String type = 'threat';
-    String finalAction;
-
-    // Determine action based on threat level if not provided
-    if (action == null) {
-      switch (threatLevel) {
-        case 'high':
-          finalAction = 'Aplikasi diblokir';
-          break;
-        case 'medium':
-          finalAction = 'Peringatan ditampilkan';
-          break;
-        case 'low':
-          finalAction = 'Konten terdeteksi';
-          break;
-        default:
-          finalAction = 'Monitoring';
-      }
-    } else {
-      finalAction = action;
-    }
-
-    switch (threatLevel) {
-      case 'low':
-        title = 'Deteksi Ringan';
-        message = '$appName: $contentType terdeteksi';
-        type = 'warning';
-        break;
-      case 'medium':
-        title = 'Peringatan Sedang';
-        message = '$appName: $contentType - Waspada!';
-        type = 'warning';
-        break;
       case 'high':
-        title = 'Ancaman Tinggi';
-        message = '$appName: $contentType - Aplikasi diblokir!';
-        type = 'threat';
-        break;
+        return Colors.red;
+      case 'critical':
+        return Colors.purple;
       default:
-        title = 'Deteksi Konten';
-        message = '$appName: $contentType';
-        type = 'info';
+        return Colors.blue;
     }
-
-    addNotification(
-      title: title,
-      message: message,
-      type: type,
-      level: threatLevel,
-      app: appName,
-      action: finalAction,
-    );
-  }
-
-  // Helper method to add monitoring status notification
-  void addMonitoringNotification({required bool isActive}) {
-    addNotification(
-      title: isActive ? 'Monitoring Dimulai' : 'Monitoring Dihentikan',
-      message: isActive
-          ? 'Sistem monitoring parental control telah aktif.'
-          : 'Sistem monitoring parental control dihentikan.',
-      type: 'info',
-      level: 'low',
-      app: 'System',
-      action: isActive ? 'start_monitoring' : 'stop_monitoring',
-    );
   }
 }

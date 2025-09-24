@@ -1,21 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'login_screen.dart';
 
-class OnboardingScreen extends StatefulWidget {
+// Provider untuk mengelola halaman onboarding saat ini
+final onboardingPageProvider = StateProvider<int>((ref) => 0);
+
+// Provider untuk PageController
+final pageControllerProvider =
+    Provider<PageController>((ref) => PageController());
+
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  int currentPage = 0;
-  final PageController _pageController = PageController();
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = ref.read(pageControllerProvider);
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Watch current page untuk reactive updates
+    final currentPage = ref.watch(onboardingPageProvider);
+
     return WillPopScope(
-      onWillPop: () async => false, // Prevent back navigation to splash
+      onWillPop: () async => false, // Mencegah navigasi kembali ke splash
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
@@ -23,7 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               children: [
-                // App Title - Static
+                // Judul aplikasi - Static
                 Container(
                   padding: const EdgeInsets.only(top: 16, bottom: 32),
                   child: Text(
@@ -38,7 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ),
 
-                // Sliding Image Section
+                // Bagian gambar yang dapat digeser
                 Expanded(
                   flex: 5,
                   child: Container(
@@ -47,35 +65,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: PageView(
                       controller: _pageController,
                       onPageChanged: (int page) {
-                        setState(() {
-                          currentPage = page;
-                        });
+                        // Update state menggunakan Riverpod
+                        ref.read(onboardingPageProvider.notifier).state = page;
                       },
                       children: [
                         Image.asset(
                           "assets/images/Onboarding1.png",
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.image_not_supported, size: 100),
                         ),
                         Image.asset(
                           "assets/images/Onboarding2.png",
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.image_not_supported, size: 100),
                         ),
                         Image.asset(
                           "assets/images/Onboarding3.png",
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.image_not_supported, size: 100),
                         ),
                       ],
                     ),
                   ),
                 ),
 
-                // Static Content Section
+                // Bagian konten statis
                 Expanded(
                   flex: 3,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Dynamic Title based on current page
+                      // Judul dinamis berdasarkan halaman saat ini
                       Text(
                         _getTitleForPage(currentPage),
                         textAlign: TextAlign.center,
@@ -88,10 +111,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
 
-                      // Page Indicators
-                      _buildPageIndicators(),
+                      // Indikator halaman
+                      _buildPageIndicators(currentPage),
 
-                      // Dynamic Description based on current page
+                      // Deskripsi dinamis berdasarkan halaman saat ini
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(
@@ -107,7 +130,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
 
-                      // Buttons Section
+                      // Bagian tombol
                       _buildBottomButtons(currentPage),
                     ],
                   ),
@@ -120,19 +143,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  /// Mendapatkan judul berdasarkan indeks halaman
   String _getTitleForPage(int pageIndex) {
     switch (pageIndex) {
       case 0:
-        return "Lindungi\nDirimu";
+        return "Lindungi\\nDirimu";
       case 1:
-        return "Mudah\nDigunakan";
+        return "Mudah\\nDigunakan";
       case 2:
-        return "Siap\nMulai";
+        return "Siap\\nMulai";
       default:
-        return "Lindungi\nDirimu";
+        return "Lindungi\\nDirimu";
     }
   }
 
+  /// Mendapatkan deskripsi berdasarkan indeks halaman
   String _getDescriptionForPage(int pageIndex) {
     switch (pageIndex) {
       case 0:
@@ -146,7 +171,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  Widget _buildPageIndicators() {
+  /// Widget untuk membuat indikator halaman
+  Widget _buildPageIndicators(int currentPage) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (index) {
@@ -165,15 +191,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  /// Widget untuk membuat tombol bagian bawah
   Widget _buildBottomButtons(int pageIndex) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 32, top: 16),
       child: Row(
         children: [
-          // Left Button
+          // Tombol kiri
           Expanded(
             child: _buildButton(
-              text: pageIndex == 2 ? 'Back' : 'Skip',
+              text: pageIndex == 2 ? 'Kembali' : 'Lewati',
               isOutlined: true,
               onTap: pageIndex == 2 ? _previousPage : _skipOnboarding,
             ),
@@ -181,10 +208,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           const SizedBox(width: 16),
 
-          // Right Button
+          // Tombol kanan
           Expanded(
             child: _buildButton(
-              text: pageIndex == 2 ? 'Get Started' : 'Next',
+              text: pageIndex == 2 ? 'Mulai' : 'Lanjut',
               isOutlined: false,
               onTap: pageIndex == 2 ? _getStarted : _nextPage,
             ),
@@ -194,6 +221,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  /// Widget untuk membuat tombol dengan style yang konsisten
   Widget _buildButton({
     required String text,
     required bool isOutlined,
@@ -235,7 +263,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  /// Navigasi ke halaman selanjutnya
   void _nextPage() {
+    final currentPage = ref.read(onboardingPageProvider);
     if (currentPage < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -244,7 +274,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  /// Navigasi ke halaman sebelumnya
   void _previousPage() {
+    final currentPage = ref.read(onboardingPageProvider);
     if (currentPage > 0) {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
@@ -253,12 +285,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  /// Melewati onboarding dan langsung ke login menggunakan GetX
   void _skipOnboarding() {
-    Navigator.pushReplacementNamed(context, '/login');
+    Get.off(() => const LoginScreen(),
+        transition: Transition.rightToLeft,
+        duration: const Duration(milliseconds: 300));
   }
 
+  /// Mulai aplikasi dan navigasi ke login menggunakan GetX
   void _getStarted() {
-    Navigator.pushReplacementNamed(context, '/login');
+    Get.off(() => const LoginScreen(),
+        transition: Transition.rightToLeft,
+        duration: const Duration(milliseconds: 300));
   }
 
   @override

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "raflefly_front" "\0"
+            VALUE "FileDescription", "front_end" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "raflefly_front" "\0"
+            VALUE "InternalName", "front_end" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "raflefly_front.exe" "\0"
-            VALUE "ProductName", "raflefly_front" "\0"
+            VALUE "OriginalFilename", "front_end.exe" "\0"
+            VALUE "ProductName", "front_end" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

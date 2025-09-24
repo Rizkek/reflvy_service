@@ -1,4 +1,4 @@
-package com.example.raflefly_front
+package com.example.front_end
 
 import io.flutter.embedding.android.FlutterActivity
 
