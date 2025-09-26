@@ -150,7 +150,6 @@ func aggregateStatistics(stats []models.StatisticDocument, period string) interf
 				"totalMedium":     0,
 				"totalHigh":       0,
 				"appBreakdown":    map[string]models.AppStatCounter{},
-				"dailyBreakdown":  []models.StatisticDocument{},
 			}
 		} else {
 			return PeriodStatistics{
@@ -191,14 +190,13 @@ func aggregateStatistics(stats []models.StatisticDocument, period string) interf
 	}
 
 	if period == "today" {
-		// For "today", return the original format for backward compatibility
+		// For "today", return only totals and app breakdown (no daily breakdown)
 		return map[string]interface{}{
 			"totalGrandTotal": totalGrandTotal,
 			"totalLow":        totalLow,
 			"totalMedium":     totalMedium,
 			"totalHigh":       totalHigh,
 			"appBreakdown":    appBreakdown,
-			"dailyBreakdown":  stats,
 		}
 	}
 
