@@ -36,5 +36,8 @@ func SetupRoutes(router *gin.Engine, authClient *auth.Client, db *firestore.Clie
 
 		// Endpoint untuk detect NSFW
 		protected.POST("/detectnsfw", detectnsfw.DetectNSFWHandler(db))
+
+		// Endpoint untuk mendapatkan statistik berdasarkan periode
+		protected.GET("/statistics", statistic.GetStatisticHandler(db))
 	}
 }
