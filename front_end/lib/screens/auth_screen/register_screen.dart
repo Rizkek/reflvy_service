@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
+import 'package:raflefly_front/screens/legal_screen/syarat_ketentuan.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -148,10 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF181818)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'Daftar Akun',
           style: GoogleFonts.raleway(
@@ -503,7 +502,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _selectedGender,
+                      initialValue: _selectedGender,
                       decoration: InputDecoration(
                         hintText: 'Pilih jenis kelamin',
                         hintStyle: GoogleFonts.raleway(
@@ -643,12 +642,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 children: [
                                   const TextSpan(text: 'Saya menyetujui '),
-                                  TextSpan(
-                                    text: 'Syarat dan Ketentuan',
-                                    style: GoogleFonts.raleway(
-                                      color: const Color(0xFF3F88EB),
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
+                                  WidgetSpan(
+                                    alignment: PlaceholderAlignment.baseline,
+                                    baseline: TextBaseline.alphabetic,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Get.to(
+                                          () => const SyaratKetentuanScreen(),
+                                        );
+                                      },
+                                      child: Text(
+                                        'Syarat dan Ketentuan',
+                                        style: GoogleFonts.raleway(
+                                          color: const Color(0xFF3F88EB),
+                                          fontWeight: FontWeight.w600,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const TextSpan(text: ' serta '),

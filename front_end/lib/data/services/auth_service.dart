@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 
 class AuthService {
-  static const String _baseUrl =
-      'http://localhost:8080/api'; // Update with your Go backend URL
+  // static const String _baseUrl =
+  //     'http://localhost:8080/api'; // Update with your Go backend URL
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 

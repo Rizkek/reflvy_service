@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'screens/splash_screen.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/forgot_password_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/notification_screen.dart';
-import 'screens/history_detection_screen.dart';
-import 'screens/history_detail_screen.dart';
-import 'services/notification_service.dart';
+import 'package:raflefly_front/screens/main_screens/profile/main_profile.dart';
+import 'package:raflefly_front/screens/legal_screen/syarat_ketentuan.dart';
+import 'package:raflefly_front/services/splash_screen.dart';
+import 'services/onboarding_screen.dart';
+import 'screens/auth_screen/login_screen.dart';
+import 'screens/auth_screen/register_screen.dart';
+import 'screens/auth_screen/forgot_password_screen.dart';
+import 'screens/main_screens/dashboard/home_screen.dart';
+import 'screens/main_screens/dashboard/notification_screen.dart';
+import 'screens/main_screens/monitoring/history_detection_screen.dart';
+import 'screens/main_screens/dashboard/ringkasan_tujuh_hari.dart';
+import 'services/pop_up_alert.dart';
 import 'controller/auth_controller.dart';
 
 void main() async {
@@ -50,11 +51,15 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/login', page: () => const LoginScreen()),
         GetPage(name: '/register', page: () => const RegisterScreen()),
         GetPage(
+          name: '/syarat-ketentuan',
+          page: () => const SyaratKetentuanScreen(),
+        ),
+        GetPage(
           name: '/forgot-password',
           page: () => const ForgotPasswordScreen(),
         ),
         GetPage(name: '/home', page: () => const HomeScreen()),
-        GetPage(name: '/profile', page: () => const ProfileScreen()),
+        GetPage(name: '/profile', page: () => const SettingsPage()),
         GetPage(name: '/notifications', page: () => const NotificationScreen()),
         GetPage(name: '/history', page: () => const HistoryDetectionScreen()),
         GetPage(

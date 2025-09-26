@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/notification_history_service.dart';
+import '../../../services/notification_history_service.dart';
 
 class HistoryDetectionScreen extends StatefulWidget {
-  const HistoryDetectionScreen({Key? key}) : super(key: key);
+  const HistoryDetectionScreen({super.key});
 
   @override
   State<HistoryDetectionScreen> createState() => _HistoryDetectionScreenState();
@@ -325,7 +325,7 @@ class _HistoryDetectionScreenState extends State<HistoryDetectionScreen> {
                         'Total Deteksi',
                         '$totalDetections',
                         weekChange >= 0
-                            ? '↗ ${weekChange}%'
+                            ? '↗ $weekChange%'
                             : '↘ ${weekChange.abs()}%',
                         weekChange >= 0 ? Colors.green : Colors.red,
                         isSmallScreen,

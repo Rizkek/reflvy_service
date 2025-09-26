@@ -5,8 +5,11 @@ class HistoryDetailScreen extends StatefulWidget {
   final String title;
   final String type; // "weekly", "apps", atau "activity"
 
-  const HistoryDetailScreen({Key? key, required this.title, required this.type})
-    : super(key: key);
+  const HistoryDetailScreen({
+    super.key,
+    required this.title,
+    required this.type,
+  });
 
   @override
   State<HistoryDetailScreen> createState() => _HistoryDetailScreenState();
