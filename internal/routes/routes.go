@@ -21,8 +21,11 @@ func SetupRoutes(router *gin.Engine, authClient *auth.Client, db *firestore.Clie
 		c.JSON(200, gin.H{"message": "This is a public endpoint"})
 	})
 
-	// Route untuk generate dummy statistik (tidak perlu auth, hanya untuk dev)
-	router.POST("/api/statistic/dummy", statistic.GenerateDummyStatisticHandler(db))
+	// Route untuk generate dummy statistik hari ini dengan email input (tidak perlu auth, hanya untuk dev)
+	router.POST("/api/statistic/dummy", statistic.GenerateTodayDummyStatisticHandler(db))
+
+	// Route untuk generate dummy statistik historis (tidak perlu auth, hanya untuk dev)
+	router.POST("/api/statistic/dummy/historical", statistic.GenerateDummyStatisticHandler(db))
 
 	// Protected routes
 	protected := router.Group("/api")
@@ -36,5 +39,8 @@ func SetupRoutes(router *gin.Engine, authClient *auth.Client, db *firestore.Clie
 
 		// Endpoint untuk detect NSFW
 		protected.POST("/detectnsfw", detectnsfw.DetectNSFWHandler(db))
+
+		// Endpoint untuk mendapatkan statistik berdasarkan periode
+		protected.GET("/statistics", statistic.GetStatisticHandler(db))
 	}
 }

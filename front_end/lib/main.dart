@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_navigation.dart';
 import 'screens/profile_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/history_detection_screen.dart';
 import 'screens/history_detail_screen.dart';
 import 'services/notification_service.dart';
-import 'controller/auth_controller.dart';
+import 'controllers/auth_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Initialize notification service
   await NotificationService().initialize();

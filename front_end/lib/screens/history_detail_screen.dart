@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/statistics_service.dart';
 
 class HistoryDetailScreen extends StatefulWidget {
   final String title;
@@ -13,6 +14,11 @@ class HistoryDetailScreen extends StatefulWidget {
 }
 
 class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
+  // State for "apps" (today) loaded from SharedPreferences
+  List<Map<String, dynamic>> _todayAppItems = [];
+  int _todayTotalApps = 0; // distinct apps detected today (Total > 0)
+  String _todayWorstApp = '-';
+
   // Dummy data untuk history 7 hari terakhir
   final List<Map<String, dynamic>> weeklyHistory = [
     {
@@ -74,75 +80,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   ];
 
   // Dummy data untuk aplikasi terdeteksi
-  final List<Map<String, dynamic>> appsHistory = [
-    {
-      'name': 'YouTube',
-      'percentage': 67,
-      'detections': 8,
-      'lastDetection': '15 Sep, 14:30',
-      'icon': Icons.play_circle_fill,
-      'color': Colors.red,
-      'details': [
-        {
-          'time': '15 Sep, 14:30',
-          'level': 'medium',
-          'content': 'Video konten dewasa',
-        },
-        {
-          'time': '15 Sep, 12:15',
-          'level': 'low',
-          'content': 'Thumbnail tidak pantas',
-        },
-        {
-          'time': '14 Sep, 20:45',
-          'level': 'high',
-          'content': 'Konten eksplisit',
-        },
-        {
-          'time': '14 Sep, 18:20',
-          'level': 'low',
-          'content': 'Komentar tidak pantas',
-        },
-        {
-          'time': '13 Sep, 16:30',
-          'level': 'medium',
-          'content': 'Video berbahaya',
-        },
-      ],
-    },
-    {
-      'name': 'Instagram',
-      'percentage': 23,
-      'detections': 3,
-      'lastDetection': '14 Sep, 19:15',
-      'icon': Icons.camera_alt,
-      'color': Colors.purple,
-      'details': [
-        {'time': '14 Sep, 19:15', 'level': 'high', 'content': 'Foto eksplisit'},
-        {
-          'time': '13 Sep, 15:45',
-          'level': 'medium',
-          'content': 'Story tidak pantas',
-        },
-        {'time': '12 Sep, 22:30', 'level': 'low', 'content': 'Caption vulgar'},
-      ],
-    },
-    {
-      'name': 'TikTok',
-      'percentage': 10,
-      'detections': 1,
-      'lastDetection': '12 Sep, 16:20',
-      'icon': Icons.music_note,
-      'color': Colors.black,
-      'details': [
-        {
-          'time': '12 Sep, 16:20',
-          'level': 'medium',
-          'content': 'Video dance tidak pantas',
-        },
-      ],
-    },
-  ];
+  // NOTE: For "apps" tab, we will load today's real data from SharedPreferences via StatisticsService.
 
   // Dummy data untuk activity terbaru
   final List<Map<String, dynamic>> activityHistory = [
@@ -257,18 +195,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     }
   }
 
-  IconData _getThreatIcon(String level) {
-    switch (level) {
-      case 'low':
-        return Icons.info_outline;
-      case 'medium':
-        return Icons.warning_outlined;
-      case 'high':
-        return Icons.dangerous_outlined;
-      default:
-        return Icons.help_outline;
-    }
-  }
+  // removed _getThreatIcon – not needed in today's app detail
 
   @override
   Widget build(BuildContext context) {
@@ -373,78 +300,92 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   }
 
   Widget _buildAppsDetail() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Summary Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ringkasan Aplikasi Terdeteksi',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildSummaryItem(
-                        'Total Apps',
-                        appsHistory.length.toString(),
-                        Icons.apps,
-                        const Color(0xFF3B82F6),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildSummaryItem(
-                        'Terburuk',
-                        appsHistory.first['name'],
-                        Icons.warning,
-                        const Color(0xFFEF4444),
-                      ),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _ensureTodayAppsLoaded(),
+      builder: (context, snapshot) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Summary Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      spreadRadius: 0,
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ringkasan Aplikasi Terdeteksi Hari Ini',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryItem(
+                            'Total Apps',
+                            _todayTotalApps.toString(),
+                            Icons.apps,
+                            const Color(0xFF3B82F6),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildSummaryItem(
+                            'Terburuk',
+                            _todayWorstApp,
+                            Icons.warning,
+                            const Color(0xFFEF4444),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
-          // Detail per aplikasi
-          Text(
-            'Detail Per Aplikasi',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 12),
+              // Detail per aplikasi
+              Text(
+                'Detail Per Aplikasi',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
 
-          ...appsHistory.map((app) => _buildAppDetail(app)).toList(),
-        ],
-      ),
+              if (_todayAppItems.isEmpty)
+                Text(
+                  'Belum ada data aplikasi terdeteksi hari ini',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: const Color(0xFF64748B),
+                  ),
+                )
+              else
+                ..._todayAppItems.map((app) => _buildAppDetail(app)).toList(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -642,13 +583,13 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: app['color'].withOpacity(0.1),
+            color: (app['color'] as Color).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(app['icon'], color: app['color'], size: 20),
+          child: Icon(app['icon'] as IconData, color: app['color'] as Color, size: 20),
         ),
         title: Text(
-          app['name'],
+          app['name'] as String,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -656,7 +597,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
           ),
         ),
         subtitle: Text(
-          '${app['detections']} deteksi • ${app['percentage']}% dari total',
+          '${app['total']} deteksi',
           style: GoogleFonts.inter(
             fontSize: 14,
             color: const Color(0xFF64748B),
@@ -669,7 +610,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'History Deteksi',
+                  'Rincian Hari Ini (Low/Medium/High)',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -677,9 +618,15 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...app['details']
-                    .map<Widget>((detail) => _buildDetectionItem(detail))
-                    .toList(),
+                Row(
+                  children: [
+                    Expanded(child: _buildThreatCount('Low', app['low'] as int, const Color(0xFF22C55E))),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildThreatCount('Medium', app['medium'] as int, const Color(0xFFF59E0B))),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildThreatCount('High', app['high'] as int, const Color(0xFFEF4444))),
+                  ],
+                ),
               ],
             ),
           ),
@@ -688,50 +635,79 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     );
   }
 
-  Widget _buildDetectionItem(Map<String, dynamic> detail) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _getThreatColor(detail['level']).withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _getThreatColor(detail['level']).withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            _getThreatIcon(detail['level']),
-            color: _getThreatColor(detail['level']),
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  detail['content'],
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                Text(
-                  '${detail['time']} • ${_getThreatLabel(detail['level'])}',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<Map<String, dynamic>?> _ensureTodayAppsLoaded() async {
+    if (_todayAppItems.isNotEmpty) return {};
+    final cached = await StatisticsService.getCachedToday();
+    Map<String, dynamic>? source = cached;
+    source ??= await StatisticsService.getToday();
+    if (!mounted) return source;
+    final List<Map<String, dynamic>> items = [];
+    String worstName = '-';
+    int totalApps = 0;
+    if (source != null) {
+      final stats = source['statistics'] as Map<String, dynamic>?;
+      final appBreakdown = (stats?['appBreakdown'] as Map?)?.cast<String, dynamic>();
+      if (appBreakdown != null && appBreakdown.isNotEmpty) {
+        for (final entry in appBreakdown.entries) {
+          final name = entry.key;
+          final val = (entry.value as Map).cast<String, dynamic>();
+          final total = (val['Total'] ?? 0) as int;
+          if (total <= 0) continue;
+          final low = (val['Low'] ?? 0) as int;
+          final med = (val['Medium'] ?? 0) as int;
+          final high = (val['High'] ?? 0) as int;
+          final iconAndColor = _iconAndColorForApp(name);
+          items.add({
+            'name': _capitalize(name),
+            'total': total,
+            'low': low,
+            'medium': med,
+            'high': high,
+            'icon': iconAndColor['icon'] as IconData,
+            'color': iconAndColor['color'] as Color,
+          });
+        }
+        // Sort items by total desc for listing
+        items.sort((a, b) => (b['total'] as int).compareTo(a['total'] as int));
+        totalApps = items.length;
+        if (items.isNotEmpty) {
+          final worst = List<Map<String, dynamic>>.from(items)
+            ..sort((a, b) {
+              final hb = b['high'] as int;
+              final ha = a['high'] as int;
+              if (hb != ha) return hb.compareTo(ha);
+              final mb = b['medium'] as int;
+              final ma = a['medium'] as int;
+              if (mb != ma) return mb.compareTo(ma);
+              return (b['total'] as int).compareTo(a['total'] as int);
+            });
+          worstName = worst.first['name'] as String;
+        }
+      }
+    }
+    setState(() {
+      _todayAppItems = items;
+      _todayTotalApps = totalApps;
+      _todayWorstApp = worstName;
+    });
+    return source;
+  }
+
+  Map<String, dynamic> _iconAndColorForApp(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('you')) return {'icon': Icons.play_arrow, 'color': const Color(0xFFDC2626)};
+    if (n.contains('insta')) return {'icon': Icons.camera_alt, 'color': const Color(0xFF8B5CF6)};
+    if (n.contains('face')) return {'icon': Icons.facebook, 'color': const Color(0xFF2563EB)};
+    if (n.contains('twit') || n == 'x') return {'icon': Icons.close, 'color': const Color(0xFF0EA5E9)};
+    if (n.contains('tiktok') || n.contains('tok')) return {'icon': Icons.music_note, 'color': const Color(0xFF111827)};
+    return {'icon': Icons.apps, 'color': const Color(0xFF3B82F6)};
+  }
+
+  // (removed) old detection item renderer – not used in today's apps detail
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
   }
 
   Widget _buildActivityDetail() {

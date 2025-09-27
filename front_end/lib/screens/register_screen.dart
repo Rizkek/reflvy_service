@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import '../models/user.dart';
+import '../controllers/register_controller.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,6 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _registerController = RegisterController();
+  
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -33,16 +38,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  // UI Helper Methods
   Future<void> _selectBirthdate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now().subtract(
         const Duration(days: 365 * 18),
-      ), // Default to 18 years ago
+      ),
       firstDate: DateTime(1900),
       lastDate: DateTime.now().subtract(
         const Duration(days: 365 * 13),
-      ), // Minimum 13 years old
+      ),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -62,82 +68,181 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
-  Future<void> _register() async {
-    if (_formKey.currentState!.validate() &&
-        _acceptTerms &&
-        _selectedGender != null &&
-        _selectedBirthdate != null) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // TODO: Implement Firebase Auth registration
-      // Simulasi loading untuk sekarang
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Show success message and navigate to login
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Registrasi berhasil! Silakan cek email untuk verifikasi.',
-              style: GoogleFonts.raleway(),
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
+  // Function to show success dialog
+  void _showSuccessDialog(String title, String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.rightSlide,
+      title: title,
+      desc: message,
+      titleTextStyle: GoogleFonts.raleway(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF181818),
+      ),
+      descTextStyle: GoogleFonts.raleway(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF979797),
+      ),
+      btnOkColor: const Color(0xFF3F88EB),
+      btnOkText: 'OK',
+      btnOkOnPress: () {
         Navigator.pushReplacementNamed(context, '/login');
+      },
+    ).show();
+  }
+
+  // Function to show warning dialog
+  void _showWarningDialog(String title, String message, VoidCallback onOk) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.warning,
+      animType: AnimType.rightSlide,
+      title: title,
+      desc: message,
+      titleTextStyle: GoogleFonts.raleway(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF181818),
+      ),
+      descTextStyle: GoogleFonts.raleway(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF979797),
+      ),
+      btnOkColor: Colors.orange,
+      btnOkText: 'OK',
+      btnOkOnPress: onOk,
+    ).show();
+  }
+
+  // Function to show error dialog
+  void _showErrorDialog(String title, String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.rightSlide,
+      title: title,
+      desc: message,
+      titleTextStyle: GoogleFonts.raleway(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF181818),
+      ),
+      descTextStyle: GoogleFonts.raleway(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF979797),
+      ),
+      btnOkColor: Colors.red,
+      btnOkText: 'OK',
+      btnOkOnPress: () {},
+    ).show();
+  }
+
+  Future<void> _register() async {
+    // Validate required fields first
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_acceptTerms) {
+      _showErrorDialog(
+        'Persetujuan Diperlukan',
+        'Anda harus menyetujui syarat dan ketentuan untuk melanjutkan registrasi.',
+      );
+      return;
+    }
+
+    if (_selectedGender == null) {
+      _showErrorDialog(
+        'Data Belum Lengkap',
+        'Silakan pilih jenis kelamin Anda.',
+      );
+      return;
+    }
+
+    if (_selectedBirthdate == null) {
+      _showErrorDialog(
+        'Data Belum Lengkap',
+        'Silakan pilih tanggal lahir Anda.',
+      );
+      return;
+    }
+
+    // Create user model
+    final user = User(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      gender: _selectedGender!,
+      birthdate: _selectedBirthdate!,
+      acceptTerms: _acceptTerms,
+    );
+
+    // Start loading
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Call controller to register
+      final result = await _registerController.register(user, _confirmPasswordController.text);
+
+      if (mounted) {
+        if (result.success) {
+          switch (result.type) {
+            case RegisterResultType.success:
+              _showSuccessDialog(
+                'Registrasi Berhasil!',
+                result.message,
+              );
+              break;
+            case RegisterResultType.partialSuccess:
+              _showWarningDialog(
+                'Registrasi Berhasil dengan Catatan',
+                result.message,
+                () {
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+              );
+              break;
+            default:
+              _showSuccessDialog(
+                'Registrasi Berhasil!',
+                result.message,
+              );
+          }
+        } else {
+          _showErrorDialog(
+            result.type == RegisterResultType.validationError
+                ? 'Data Tidak Valid'
+                : 'Registrasi Gagal',
+            result.message,
+          );
+        }
       }
-    } else if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Anda harus menyetujui syarat dan ketentuan',
-            style: GoogleFonts.raleway(),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else if (_selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Pilih jenis kelamin Anda',
-            style: GoogleFonts.raleway(),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else if (_selectedBirthdate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Pilih tanggal lahir Anda',
-            style: GoogleFonts.raleway(),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog(
+          'Terjadi Kesalahan',
+          'Kesalahan tidak terduga: $e',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

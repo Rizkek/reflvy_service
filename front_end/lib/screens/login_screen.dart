@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import '../models/login.dart';
+import '../controllers/login_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final LoginController _loginController = LoginController();
+  
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -22,23 +27,98 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn() async {
+  void _showErrorDialog(String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.scale,
+      title: "Login Gagal",
+      desc: message,
+      btnCancelOnPress: () {},
+      btnCancelText: "Coba Lagi",
+      buttonsTextStyle: GoogleFonts.poppins(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+      descTextStyle: GoogleFonts.poppins(
+        fontSize: 14,
+      ),
+    ).show();
+  }
+
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  'Sedang login...',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _hideLoadingDialog() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+  }
+
+  void _navigateToHome() {
+    Navigator.pushReplacementNamed(context, '/home');
+  }
+
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
+      // Create login credentials
+      final credentials = LoginCredentials(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
       setState(() {
         _isLoading = true;
       });
 
-      // TODO: Implement Firebase Auth login
-      // Simulasi loading untuk sekarang
-      await Future.delayed(const Duration(seconds: 2));
+      _showLoadingDialog();
 
-      setState(() {
-        _isLoading = false;
-      });
+      try {
+        final result = await _loginController.login(credentials);
 
-      // Navigate to home screen
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        _hideLoadingDialog();
+
+        if (result.success) {
+          // Direct navigation to home screen without popup
+          _navigateToHome();
+        } else {
+          _showErrorDialog(result.message);
+        }
+      } catch (e) {
+        _hideLoadingDialog();
+        _showErrorDialog('Terjadi kesalahan tidak terduga: ${e.toString()}');
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -263,7 +343,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _signIn,
+                        onPressed: _isLoading ? null : _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3F88EB),
                           foregroundColor: Colors.white,
