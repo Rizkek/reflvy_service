@@ -32,7 +32,7 @@ func SetupRoutes(router *gin.Engine, authClient *auth.Client, db *firestore.Clie
 	protected.Use(middleware.AuthMiddleware(authClient))
 	{
 		// Endpoint lama untuk mendapatkan profil (akan kita update)
-		protected.GET("/profile", profile.ProfileHandler(db)) // Berikan db client ke handler
+		protected.GET("/profile", profile.ProfileHandler(authClient, db)) // Berikan authClient dan db client ke handler
 
 		// Endpoint BARU untuk menyimpan detail gender dan usia
 		protected.POST("/profile/details", profile.SaveUserDetailsHandler(db))

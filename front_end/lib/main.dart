@@ -15,6 +15,7 @@ import 'screens/history_detection_screen.dart';
 import 'screens/history_detail_screen.dart';
 import 'services/notification_service.dart';
 import 'controllers/auth_controller.dart';
+import 'screens/change_password_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +63,7 @@ class MyApp extends StatelessWidget {
         ),
         GetPage(name: '/home', page: () => const HomeScreen()),
         GetPage(name: '/profile', page: () => const ProfileScreen()),
+  GetPage(name: '/change-password', page: () => const ChangePasswordScreen()),
         GetPage(name: '/notifications', page: () => const NotificationScreen()),
         GetPage(name: '/history', page: () => const HistoryDetectionScreen()),
         GetPage(

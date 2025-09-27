@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -13,6 +14,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
   bool _emailSent = false;
+  bool _readOnlyEmail = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map) {
+      final initialEmail = args['initialEmail'] as String?;
+      final readOnly = args['readOnlyEmail'] as bool?;
+      if (initialEmail != null && initialEmail.isNotEmpty) {
+        _emailController.text = initialEmail;
+      }
+      _readOnlyEmail = readOnly == true;
+    }
+  }
 
   @override
   void dispose() {
@@ -26,14 +42,47 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _isLoading = true;
       });
 
-      // TODO: Implement Firebase Auth password reset
-      // Simulasi loading untuk sekarang
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _isLoading = false;
-        _emailSent = true;
-      });
+      try {
+        final email = _emailController.text.trim();
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+          _emailSent = true;
+        });
+      } on FirebaseAuthException catch (e) {
+        String msg;
+        switch (e.code) {
+          case 'invalid-email':
+            msg = 'Format email tidak valid.';
+            break;
+          case 'user-not-found':
+            msg = 'Email tidak terdaftar.';
+            break;
+          case 'missing-android-pkg-name':
+          case 'missing-continue-uri':
+          case 'missing-ios-bundle-id':
+          case 'invalid-continue-uri':
+          case 'unauthorized-continue-uri':
+            msg = 'Konfigurasi reset password belum lengkap.';
+            break;
+          default:
+            msg = e.message ?? 'Gagal mengirim email reset password.';
+        }
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg, style: GoogleFonts.raleway())),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Terjadi kesalahan: $e', style: GoogleFonts.raleway()),
+          ),
+        );
+      }
     }
   }
 
@@ -42,22 +91,49 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // TODO: Implement resend email
-    await Future.delayed(const Duration(seconds: 1));
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Email reset password telah dikirim ulang',
-          style: GoogleFonts.raleway(),
+    try {
+      final email = _emailController.text.trim();
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _emailSent = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Email reset password telah dikirim ulang',
+            style: GoogleFonts.raleway(),
+          ),
+          backgroundColor: Colors.green,
         ),
-        backgroundColor: Colors.green,
-      ),
-    );
+      );
+    } on FirebaseAuthException catch (e) {
+      String msg;
+      switch (e.code) {
+        case 'invalid-email':
+          msg = 'Format email tidak valid.';
+          break;
+        case 'user-not-found':
+          msg = 'Email tidak terdaftar.';
+          break;
+        default:
+          msg = e.message ?? 'Gagal mengirim ulang email reset password.';
+      }
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg, style: GoogleFonts.raleway())),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan: $e', style: GoogleFonts.raleway()),
+        ),
+      );
+    }
   }
 
   @override
@@ -154,6 +230,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        readOnly: _readOnlyEmail,
                         decoration: InputDecoration(
                           hintText: 'Masukkan email Anda',
                           hintStyle: GoogleFonts.raleway(
@@ -193,12 +270,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
+                          final v = value ?? '';
+                          if (v.isEmpty) {
                             return 'Email tidak boleh kosong';
                           }
-                          if (!RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          ).hasMatch(value)) {
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4} ?').hasMatch(v)) {
                             return 'Format email tidak valid';
                           }
                           return null;

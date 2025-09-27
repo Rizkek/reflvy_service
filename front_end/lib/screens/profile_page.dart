@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/secure_storage_service.dart';
 import 'login_screen.dart';
 
@@ -19,6 +20,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _uid;
   DateTime? _loginTime;
   bool _tokenExpired = false;
+  bool _updatingName = false;
 
   @override
   void initState() {
@@ -61,6 +63,82 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  Future<void> _promptUpdateDisplayName() async {
+    final controller = TextEditingController(text: _name ?? '');
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Ubah Display Name'),
+          content: TextField(
+            controller: controller,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              labelText: 'Display Name',
+              hintText: 'Masukkan nama baru',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newName == null) return; // dismissed
+    if (newName.isEmpty || newName == _name) {
+      if (newName.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nama tidak boleh kosong')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _updatingName = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak ada pengguna aktif')),
+        );
+        return;
+      }
+
+      await user.updateDisplayName(newName);
+      await user.reload();
+      final refreshed = FirebaseAuth.instance.currentUser;
+
+      if (refreshed?.displayName?.trim() == newName) {
+        await SecureStorageService.updateDisplayName(newName);
+        if (!mounted) return;
+        setState(() {
+          _name = newName;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Display name berhasil diperbarui')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal memverifikasi perubahan nama di Firebase')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memperbarui nama: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _updatingName = false);
+    }
+  }
+
   Future<void> _logout() async {
     await SecureStorageService.clearAllData();
     if (mounted) {
@@ -71,6 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +307,7 @@ class _ProfilePageState extends State<ProfilePage> {
               _sectionCard(
                 title: 'Informasi Pribadi',
                 children: [
-                  _infoRow('Nama', _name ?? '-'),
+                  _editableInfoRow('Nama', _name ?? '-', onEdit: _updatingName ? null : _promptUpdateDisplayName),
                   const SizedBox(height: 10),
                   _infoRow('Email', _email ?? '-'),
                   const SizedBox(height: 10),
@@ -252,6 +331,29 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 10),
                   _infoRow('Login Terakhir', _loginTime != null ? _formatDate(_loginTime!) : '-'),
                 ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Navigate to Change Password Page
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/change-password',
+                      arguments: {'email': _email},
+                    );
+                  },
+                  icon: const Icon(Icons.lock_reset),
+                  label: const Text('Ubah Password'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: Color(0xFF3B82F6)),
+                    foregroundColor: const Color(0xFF1F2937),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -350,6 +452,49 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _editableInfoRow(String label, String value, {VoidCallback? onEdit}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            color: const Color(0xFF6B7280),
+            fontSize: 13,
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF111827),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 6),
+            IconButton(
+              tooltip: 'Ubah nama',
+              icon: _updatingName
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.edit, size: 18),
+              onPressed: onEdit,
+              splashRadius: 18,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _statChip({required IconData icon, required String label, required String value, required Color color}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -391,6 +536,8 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  
 
   String _formatDate(DateTime dt) {
     // e.g., 2025-09-27 14:35

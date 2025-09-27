@@ -123,11 +123,31 @@ class LoginController {
 
       final profileData = profileResult['data'];
 
+      // Derive display name with graceful fallbacks when backend doesn't return it
+      String deriveDisplayName(String email) {
+        final prefix = email.split('@').first;
+        if (prefix.isEmpty) return 'Pengguna';
+        // Simple title-case-ish: split by . _ - and capitalize first token
+        final parts = prefix.split(RegExp(r'[._-]+'));
+        final first = parts.isNotEmpty ? parts.first : prefix;
+        return first.isNotEmpty
+            ? first[0].toUpperCase() + (first.length > 1 ? first.substring(1) : '')
+            : 'Pengguna';
+      }
+
+      final computedDisplayName = (profileData['display_name'] as String?)
+              ?.trim()
+              .isNotEmpty == true
+          ? (profileData['display_name'] as String).trim()
+          : (firebaseUser.displayName?.trim().isNotEmpty == true
+              ? firebaseUser.displayName!.trim()
+              : deriveDisplayName(firebaseUser.email ?? credentials.email));
+
       // Step 4: Create LoginUser object with complete profile data
       _currentUser = LoginUser(
         uid: firebaseUser.uid,
         email: firebaseUser.email ?? credentials.email,
-        displayName: profileData['display_name'],
+        displayName: computedDisplayName,
         token: idToken,
         refreshToken: refreshToken,
         loginTime: DateTime.now(),
