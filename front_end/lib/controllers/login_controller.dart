@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../models/login.dart';
-import '../services/secure_storage_service.dart';
-import '../services/profile_api_service.dart';
+import '../services/storage/secure_storage_service.dart';
+import '../services/profile/profile_service.dart';
+import '../services/api/token_refresh_service.dart';
 
 enum LoginState { idle, loading, success, error }
 
@@ -191,15 +192,39 @@ class LoginController {
         );
       }
 
-      // Check if token is expired
-      final isExpired = await SecureStorageService.isTokenExpired();
-      if (isExpired) {
-        await logout(); // Clear expired data
+      // Check if Firebase user exists (refresh token check)
+      final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (firebaseUser == null) {
+        // No Firebase session, logout
+        print('❌ No Firebase user found, logging out...');
+        await logout();
         return LoginResult(
           success: false,
           message: 'Session expired',
           type: LoginResultType.sessionExpired,
         );
+      }
+
+      // Check if JWT token is expired (timestamp-based)
+      final isExpired = await SecureStorageService.isTokenExpired();
+      if (isExpired) {
+        print('⏰ JWT token expired based on timestamp, attempting refresh...');
+        
+        // Try to refresh token using Firebase refresh token
+        final newToken = await TokenRefreshService.refreshToken();
+        
+        if (newToken == null) {
+          // Refresh failed, Firebase session might be invalid
+          print('❌ Token refresh failed, logging out...');
+          await logout();
+          return LoginResult(
+            success: false,
+            message: 'Session expired',
+            type: LoginResultType.sessionExpired,
+          );
+        }
+        
+        print('✅ Token refreshed successfully on app startup');
       }
 
       // Get user data from storage
@@ -217,6 +242,7 @@ class LoginController {
         throw Exception('Failed to get user data');
       }
     } catch (e) {
+      print('Error checking login status: $e');
       await logout(); // Clear corrupted data
       return LoginResult(
         success: false,

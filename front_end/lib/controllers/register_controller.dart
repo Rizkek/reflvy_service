@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../models/user.dart';
 import '../constants/api_constants.dart';
+import '../services/api/api_service.dart';
 
 enum RegisterState { idle, loading, success, error }
 
 class RegisterController {
+  final ApiClient _apiClient = ApiClient();
   RegisterState _state = RegisterState.idle;
   String? _errorMessage;
   User? _registeredUser;
@@ -79,9 +79,9 @@ class RegisterController {
     try {
       final credential = await firebase_auth.FirebaseAuth.instance
           .createUserWithEmailAndPassword(
-        email: user.email.trim(),
-        password: user.password,
-      );
+            email: user.email.trim(),
+            password: user.password,
+          );
 
       // Update the user's display name
       await credential.user?.updateDisplayName(user.name.trim());
@@ -109,25 +109,21 @@ class RegisterController {
     }
   }
 
-  // API profile creation
+  // API profile creation with auto-refresh retry
   Future<bool> _createProfile(String token, User user) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiUrls.profileDetails),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'gender': user.genderInEnglish,
-          'age': user.age,
-        }),
+      final response = await _apiClient.post(
+        ApiUrls.register,
+        body: {'gender': user.genderInEnglish, 'age': user.age},
+        requiresAuth: true,
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
       } else {
-        print('Profile creation failed: ${response.statusCode} - ${response.body}');
+        print(
+          'Profile creation failed: ${response.statusCode} - ${response.body}',
+        );
         return false;
       }
     } catch (e) {
@@ -151,14 +147,14 @@ class RegisterController {
     try {
       // Step 1: Register with Firebase
       final firebaseUser = await _registerWithFirebase(user);
-      
+
       if (firebaseUser == null) {
         throw Exception('Failed to create Firebase user');
       }
 
       // Step 2: Get Firebase JWT token
       final token = await firebaseUser.getIdToken();
-      
+
       if (token == null) {
         throw Exception('Failed to get authentication token');
       }
@@ -169,7 +165,7 @@ class RegisterController {
       if (profileCreated) {
         _registeredUser = user.copyWith(id: firebaseUser.uid);
         _setState(RegisterState.success);
-        
+
         return RegisterResult(
           success: true,
           message: 'Registrasi berhasil! Profil Anda telah dibuat.',
@@ -180,17 +176,18 @@ class RegisterController {
         // Profile creation failed but user is still registered in Firebase
         _registeredUser = user.copyWith(id: firebaseUser.uid);
         _setState(RegisterState.success);
-        
+
         return RegisterResult(
           success: true,
-          message: 'Akun berhasil dibuat, tetapi gagal menyimpan profil. Silakan coba login.',
+          message:
+              'Akun berhasil dibuat, tetapi gagal menyimpan profil. Silakan coba login.',
           type: RegisterResultType.partialSuccess,
           user: _registeredUser,
         );
       }
     } catch (e) {
       _setError(e.toString().replaceFirst('Exception: ', ''));
-      
+
       return RegisterResult(
         success: false,
         message: _errorMessage ?? 'Terjadi kesalahan tidak dikenal',

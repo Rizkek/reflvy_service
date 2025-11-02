@@ -3,19 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'screens/splash_screen.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/forgot_password_screen.dart';
-import 'screens/main_navigation.dart';
-import 'screens/profile_screen.dart';
-import 'screens/notification_screen.dart';
-import 'screens/history_detection_screen.dart';
-import 'screens/history_detail_screen.dart';
-import 'services/notification_service.dart';
-import 'controllers/auth_controller.dart';
-import 'screens/change_password_screen.dart';
+import 'views/splash_screen.dart';
+import 'views/onboarding_screen.dart';
+import 'views/screens/auth/login_screen.dart';
+import 'views/screens/auth/register_screen.dart';
+import 'views/screens/auth/forgot_password_screen.dart';
+import 'views/main_navigation.dart';
+import 'views/screens/profile/profile_screen.dart';
+import 'views/screens/notification/notification_screen.dart';
+import 'views/screens/dashboard/history_detection_log.dart';
+import 'services/notifications/notification_service.dart';
+
+import 'views/screens/profile/change_password_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,9 +48,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const SplashScreen(),
-      initialBinding: BindingsBuilder(() {
-        Get.put(AuthController());
-      }),
+      // initialBinding: BindingsBuilder(() {
+      //   Get.put(AuthController());
+      // }),
       getPages: [
         GetPage(name: '/splash', page: () => const SplashScreen()),
         GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
@@ -65,7 +64,6 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/profile', page: () => const ProfileScreen()),
   GetPage(name: '/change-password', page: () => const ChangePasswordScreen()),
         GetPage(name: '/notifications', page: () => const NotificationScreen()),
-        GetPage(name: '/history', page: () => const HistoryDetectionScreen()),
         GetPage(
           name: '/history-detail',
           page: () {

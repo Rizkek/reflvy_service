@@ -3,7 +3,7 @@
 // If you want to use .env file, add flutter_dotenv package and uncomment the import below
 // import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-const String baseUrl = 'http://192.168.1.39:3000'; // String.fromEnvironment('BASE_URL', defaultValue: 'http://localhost:3000');
+const String baseUrl = 'http://192.168.1.26:3000'; // String.fromEnvironment('BASE_URL', defaultValue: 'http://localhost:3000');
 
 // To use with flutter_dotenv:
 // const String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:3000';
@@ -12,7 +12,7 @@ const String baseUrl = 'http://192.168.1.39:3000'; // String.fromEnvironment('BA
 class ApiEndpoints {
   static const String profileDetails = '/api/profile';
   static const String login = '/api/auth/login';
-  static const String register = '/api/auth/register';
+  static const String register = '/api/profile/details';
   static const String statistics = '/api/statistics';
   // Add more endpoints as needed
 }
