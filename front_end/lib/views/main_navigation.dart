@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 import 'screens/dashboard/dashboard_page.dart';
-import 'screens/monitoring/simulasi_deteksi_page.dart';
 import 'screens/profile/profile_page.dart';
+import '../dummy_screen_capture/screens/monitoring_screen.dart';
+import '../dummy_screen_capture/controllers/capture_controller.dart';
+import '../dummy_screen_capture/controllers/recording_controller.dart';
+import '../dummy_screen_capture/services/auto_screenshot_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,10 +23,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize GetX controllers untuk screen capture
+    Get.put(CaptureController());
+    Get.put(RecordingController());
+    Get.put(AutoScreenshotService());
+    
     _pages = [
       DashboardPage(key: _dashboardKey),
-      // Temporarily show simulation page instead of real monitoring page
-      const SimulasiDeteksiPage(),
+      // Screen capture monitoring dengan auto screenshot
+      const MonitoringScreen(),
       const ProfilePage(),
     ];
   }

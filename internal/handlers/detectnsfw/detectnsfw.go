@@ -64,7 +64,7 @@ func DetectNSFWHandler(db *firestore.Client) gin.HandlerFunc {
 		writer.Close()
 
 		// Forward the request to the external service
-		req, err := http.NewRequest("POST", "http://127.0.0.1:5000/detect", body)
+		req, err := http.NewRequest("POST", "https://web-production-1659.up.railway.app/detect", body)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
 			return
@@ -93,24 +93,21 @@ func DetectNSFWHandler(db *firestore.Client) gin.HandlerFunc {
 			return
 		}
 
-		// Classify NSFW level
+		// Classify NSFW level using nsfw_classifier
 		nsfwLevel := services.ClassifyNSFW(apiResp.Results)
 
-		// If NSFW level > 0, save to Firestore with proper document naming and counting
-		if nsfwLevel > 0 {
-			err = updateStatisticDocument(db, userEmail, application, nsfwLevel)
-			if err != nil {
-				// Log error but don't fail the request
-				// You could add proper logging here
-			}
+		// Update statistics in Firestore (regardless of NSFW level)
+		// Save setiap detection untuk tracking dan analytics
+		err = updateStatisticDocument(db, userEmail, application, nsfwLevel)
+		if err != nil {
+			// Log error but don't fail the request
+			fmt.Printf("Error updating statistics: %v\n", err)
 		}
 
-		// Return the classification result along with original detection results
+		// Return simple response with only NSFW level (0, 1, 2, 3)
 		c.JSON(http.StatusOK, gin.H{
-			"filename":          apiResp.Filename,
-			"nsfw_level":        nsfwLevel,
-			"detection_results": apiResp.Results,
-			"status":            "success",
+			"nsfw_level": nsfwLevel,
+			"status":     "success",
 		})
 	}
 }
