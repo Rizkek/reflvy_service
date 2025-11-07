@@ -163,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
         centerTitle: true,
         elevation: 0,
         title: Text(
-          'Profil',
+          'Profile',
           style: GoogleFonts.inter(
             color: const Color(0xFF111827),
             fontSize: 18,

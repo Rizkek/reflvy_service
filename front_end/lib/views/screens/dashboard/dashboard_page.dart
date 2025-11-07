@@ -124,11 +124,13 @@ class DashboardPageState extends State<DashboardPage> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-  final isSmallScreen = screenHeight < 700;
-  final isExtraSmall = screenHeight < 620;
-  final headerHeight = screenHeight * (isExtraSmall ? 0.10 : 0.12);
-  final cardHeight = screenHeight * (isExtraSmall ? 0.11 : 0.13);
-  final chartHeight = screenHeight * (isExtraSmall ? 0.07 : 0.08);
+    final isSmallScreen = screenHeight < 700;
+    final isExtraSmall = screenHeight < 620;
+    final isExtraSmallWidth = screenWidth < 360; // Very small phones
+    final headerHeight = screenHeight * (isExtraSmall ? 0.10 : 0.12);
+    final cardHeight = screenHeight * (isExtraSmall ? 0.11 : 0.13);
+    final chartHeight = screenHeight * (isExtraSmall ? 0.07 : 0.08);
+    final cardSpacing = isExtraSmallWidth ? 6.0 : (isSmallScreen ? 8.0 : 12.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
@@ -252,12 +254,12 @@ class DashboardPageState extends State<DashboardPage> {
                   // Statistics Cards with Skeleton Loading
                   _isLoadingStats
                       ? Wrap(
-                          spacing: isSmallScreen ? 8 : 12,
-                          runSpacing: isSmallScreen ? 8 : 12,
+                          spacing: cardSpacing,
+                          runSpacing: cardSpacing,
                           children: List.generate(
                             4,
                             (index) => SizedBox(
-                              width: (screenWidth - (screenWidth * 0.1) - (isSmallScreen ? 8 : 12)) / 2,
+                              width: (screenWidth - (screenWidth * 0.1) - cardSpacing) / 2,
                               child: SkeletonStatCard(
                                 height: cardHeight.clamp(90.0, 110.0),
                                 isSmallScreen: isSmallScreen,
@@ -266,11 +268,11 @@ class DashboardPageState extends State<DashboardPage> {
                           ),
                         )
                       : Wrap(
-                          spacing: isSmallScreen ? 8 : 12,
-                          runSpacing: isSmallScreen ? 8 : 12,
+                          spacing: cardSpacing,
+                          runSpacing: cardSpacing,
                           children: [
                             SizedBox(
-                              width: (screenWidth - (screenWidth * 0.1) - (isSmallScreen ? 8 : 12)) / 2,
+                              width: (screenWidth - (screenWidth * 0.1) - cardSpacing) / 2,
                               child: StatCard(
                                 count: (_stats?['totalGrandTotal'] ?? '-').toString(),
                                 title: 'Total',
@@ -282,7 +284,7 @@ class DashboardPageState extends State<DashboardPage> {
                               ),
                             ),
                             SizedBox(
-                              width: (screenWidth - (screenWidth * 0.1) - (isSmallScreen ? 8 : 12)) / 2,
+                              width: (screenWidth - (screenWidth * 0.1) - cardSpacing) / 2,
                               child: StatCard(
                                 count: (_stats?['totalLow'] ?? '-').toString(),
                                 title: 'Low Risk',
@@ -294,7 +296,7 @@ class DashboardPageState extends State<DashboardPage> {
                               ),
                             ),
                             SizedBox(
-                              width: (screenWidth - (screenWidth * 0.1) - (isSmallScreen ? 8 : 12)) / 2,
+                              width: (screenWidth - (screenWidth * 0.1) - cardSpacing) / 2,
                               child: StatCard(
                                 count: (_stats?['totalMedium'] ?? '-').toString(),
                                 title: 'Medium Risk',
@@ -306,7 +308,7 @@ class DashboardPageState extends State<DashboardPage> {
                               ),
                             ),
                             SizedBox(
-                              width: (screenWidth - (screenWidth * 0.1) - (isSmallScreen ? 8 : 12)) / 2,
+                              width: (screenWidth - (screenWidth * 0.1) - cardSpacing) / 2,
                               child: StatCard(
                                 count: (_stats?['totalHigh'] ?? '-').toString(),
                                 title: 'High Risk',

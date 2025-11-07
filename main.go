@@ -19,7 +19,8 @@ import (
 
 // setupFirebase initializes Firebase Admin SDK and returns auth & firestore clients
 func setupFirebase() (*auth.Client, *firestore.Client) {
-	opt := option.WithCredentialsFile("reflvy-d3e67-firebase-adminsdk-fbsvc-1a9f6f899a.json")
+	// GANTI dengan nama file credentials baru yang Anda download
+	opt := option.WithCredentialsFile("reflvy-d3e67-firebase-adminsdk-fbsvc-06ae6f9b9a.json")
 
 	// Inisialisasi App
 	app, err := firebase.NewApp(context.Background(), nil, opt)

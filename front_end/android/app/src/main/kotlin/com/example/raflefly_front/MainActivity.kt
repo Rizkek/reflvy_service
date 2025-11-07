@@ -1,13 +1,19 @@
 package com.example.raflefly_front
 
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -17,9 +23,14 @@ import io.flutter.plugin.common.MethodChannel
  * 1. Handle method calls dari Flutter (via MethodChannel)
  * 2. Request MediaProjection permission
  * 3. Capture screenshot full screen
- * 4. Return data ke Flutter
+ * 4. Force close aplikasi lain (via Accessibility Service)
+ * 5. Return data ke Flutter
  */
 class MainActivity : FlutterActivity() {
+    
+    companion object {
+        private const val TAG = "MainActivity"
+    }
     
     // Channel untuk deteksi aplikasi
     private val APP_DETECTION_CHANNEL = "com.reflvy.app/app_detection"
@@ -27,8 +38,59 @@ class MainActivity : FlutterActivity() {
     // Channel untuk screen capture
     private val SCREEN_CAPTURE_CHANNEL = "com.reflvy.app/screen_capture"
     
+    // Channel untuk overlay realtime
+    private val OVERLAY_CHANNEL = "com.reflvy.app/overlay"
+    private val OVERLAY_EVENT_CHANNEL = "com.reflvy.app/overlay_events"
+    
     // Request code untuk MediaProjection permission
     private val REQUEST_CODE_SCREEN_CAPTURE = 1000
+    
+    // Event sink untuk broadcast overlay events
+    private var overlayEventSink: EventChannel.EventSink? = null
+    // If Flutter is not listening when a broadcast arrives, store it here so Dart can poll later
+    private var pendingOverlayEvent: Map<String, String>? = null
+    private var isOverlayReceiverRegistered: Boolean = false
+    
+    // BroadcastReceiver untuk overlay events
+    private val overlayBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d(TAG, "📨📨📨 BroadcastReceiver.onReceive() called! action=${intent?.action}")
+
+            when (intent?.action) {
+                OverlayService.BROADCAST_USER_DISMISSED -> {
+                    Log.d(TAG, "✅ Received BROADCAST_USER_DISMISSED")
+
+                    val payload = mapOf("action" to "dismissed")
+
+                    if (overlayEventSink != null) {
+                        overlayEventSink?.success(payload)
+                        Log.d(TAG, "📤 Event sent to Flutter: dismissed")
+                    } else {
+                        // Store pending event so Dart can poll when it resumes
+                        pendingOverlayEvent = mapOf("action" to "dismissed")
+                        Log.d(TAG, "📥 overlayEventSink null - pending event saved")
+                    }
+                }
+                OverlayService.BROADCAST_USER_CLOSE_APP -> {
+                    val appName = intent.getStringExtra("app_name") ?: "Unknown"
+                    Log.d(TAG, "✅ Received BROADCAST_USER_CLOSE_APP for: $appName")
+
+                    val payload = mapOf("action" to "close_app", "app_name" to appName)
+
+                    if (overlayEventSink != null) {
+                        overlayEventSink?.success(payload)
+                        Log.d(TAG, "📤 Event sent to Flutter: close_app, app=$appName")
+                    } else {
+                        pendingOverlayEvent = payload
+                        Log.d(TAG, "📥 overlayEventSink null - pending close_app event saved")
+                    }
+                }
+                else -> {
+                    Log.w(TAG, "⚠️ Unknown broadcast action received: ${intent?.action}")
+                }
+            }
+        }
+    }
     
     // Helper classes
     private lateinit var appDetectionHelper: AppDetectionHelper
@@ -52,6 +114,43 @@ class MainActivity : FlutterActivity() {
         appDetectionHelper = AppDetectionHelper(this)
         screenCaptureHelper = ScreenCaptureHelper(this)
         projectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        
+        // Setup EventChannel untuk overlay events
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, OVERLAY_EVENT_CHANNEL)
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    overlayEventSink = events
+                    Log.d(TAG, "✅ Overlay EventChannel listening")
+
+                    // If there was a pending event while Dart wasn't listening, forward it now
+                    pendingOverlayEvent?.let { evt ->
+                        Log.d(TAG, "📦 Flushing pending overlay event to Dart: $evt")
+                        overlayEventSink?.success(evt)
+                        pendingOverlayEvent = null
+                    }
+                }
+                
+                override fun onCancel(arguments: Any?) {
+                    // Do NOT unregister receiver here - keep receiver active so we don't miss broadcasts
+                    overlayEventSink = null
+                    Log.d(TAG, "🔇 Overlay EventChannel cancelled (receiver kept registered)")
+                }
+            })
+
+        // Register overlay broadcast receiver once globally (keep registered across Dart pause/resume)
+        if (!isOverlayReceiverRegistered) {
+            val filter = IntentFilter().apply {
+                addAction(OverlayService.BROADCAST_USER_DISMISSED)
+                addAction(OverlayService.BROADCAST_USER_CLOSE_APP)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(overlayBroadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(overlayBroadcastReceiver, filter)
+            }
+            isOverlayReceiverRegistered = true
+            Log.d(TAG, "� Overlay BroadcastReceiver registered globally")
+        }
         
         // ====== CHANNEL 1: APP DETECTION ======
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, APP_DETECTION_CHANNEL)
@@ -139,6 +238,78 @@ class MainActivity : FlutterActivity() {
                         stopService(serviceIntent)
                         Log.d("MainActivity", "⏹️ Foreground service stopped")
                         
+                        result.success(null)
+                    }
+                    
+                    else -> {
+                        result.notImplemented()
+                    }
+                }
+            }
+        
+        // ====== CHANNEL 3: OVERLAY (REALTIME POPUP) ======
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, OVERLAY_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    // Cek apakah SYSTEM_ALERT_WINDOW permission sudah aktif
+                    "canDrawOverlays" -> {
+                        val canDraw = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                            Settings.canDrawOverlays(this)
+                        } else {
+                            true // Android < 6.0 tidak perlu permission
+                        }
+                        result.success(canDraw)
+                    }
+                    
+                    // Buka pengaturan overlay
+                    "openOverlaySettings" -> {
+                        try {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                val intent = Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    android.net.Uri.parse("package:$packageName")
+                                )
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                startActivity(intent)
+                            }
+                            result.success(null)
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "Error opening overlay settings: ${e.message}")
+                            result.error("ERROR", e.message, null)
+                        }
+                    }
+                    
+                    // Tampilkan overlay
+                    "showOverlay" -> {
+                        val level = call.argument<String>("level")
+                        val appName = call.argument<String>("app_name")
+                        val imageBytes = call.argument<ByteArray>("image_bytes")
+                        
+                        if (level == null || appName == null) {
+                            result.error("INVALID_ARGUMENT", "level and app_name are required", null)
+                            return@setMethodCallHandler
+                        }
+                        
+                        Log.d(TAG, "📤 Starting OverlayService: level=$level, app=$appName")
+                        
+                        // Start OverlayService (NO MORE image_bytes - fixed TransactionTooLargeException)
+                        val intent = Intent(this, OverlayService::class.java).apply {
+                            action = OverlayService.ACTION_SHOW_OVERLAY
+                            putExtra("level", level)
+                            putExtra("app_name", appName)
+                            // ✅ NO MORE image_bytes
+                        }
+                        
+                        startService(intent)
+                        result.success(null)
+                    }
+                    
+                    // Sembunyikan overlay
+                    "hideOverlay" -> {
+                        val intent = Intent(this, OverlayService::class.java).apply {
+                            action = OverlayService.ACTION_HIDE_OVERLAY
+                        }
+                        startService(intent)
                         result.success(null)
                     }
                     
