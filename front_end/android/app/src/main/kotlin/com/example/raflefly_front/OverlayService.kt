@@ -102,18 +102,18 @@ class OverlayService : Service() {
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 windowType,
-                // ✅ FIXED: Remove FLAG_NOT_FOCUSABLE to allow button clicks
-                // Use FLAG_NOT_TOUCH_MODAL to allow touches on overlay but pass through to background
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                // ✅ FULL SCREEN FLAGS - Menutupi seluruh layar seperti notifikasi telepon
+                // Remove FLAG_NOT_TOUCH_MODAL to make overlay fully block interactions
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                         WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.CENTER
             }
             
-            Log.d(TAG, "🎯 Window flags: FLAG_NOT_TOUCH_MODAL | FLAG_LAYOUT_IN_SCREEN | FLAG_KEEP_SCREEN_ON")
+            Log.d(TAG, "🎯 Window flags: FULL_SCREEN | LAYOUT_IN_SCREEN | KEEP_SCREEN_ON | LAYOUT_NO_LIMITS")
             
             // Tampilkan overlay
             Log.d(TAG, "🎯 Adding view to WindowManager...")
@@ -143,25 +143,30 @@ class OverlayService : Service() {
         val btnIgnore = view.findViewById<Button>(R.id.btnIgnore)
         val btnClose = view.findViewById<Button>(R.id.btnClose)
         
-        // Set title
-        tvTitle.text = "⚠️ KONTEN BERBAHAYA TERDETEKSI"
+        // Set title - lebih dramatis untuk full screen
+        tvTitle.text = when (level) {
+            "LOW" -> "⚠️ PERINGATAN KONTEN"
+            "MEDIUM" -> "🚨 PERINGATAN SERIUS"
+            "HIGH" -> "🔴 PERINGATAN KRITIS"
+            else -> "⚠️ KONTEN BERBAHAYA TERDETEKSI"
+        }
         
         // Set badge based on level
         tvBadge.text = level
         val badgeColor = when (level) {
-            "LOW" -> android.graphics.Color.parseColor("#FFC107")
-            "MEDIUM" -> android.graphics.Color.parseColor("#FF9800")
-            "HIGH" -> android.graphics.Color.parseColor("#F44336")
+            "LOW" -> android.graphics.Color.parseColor("#FFC107") // Kuning
+            "MEDIUM" -> android.graphics.Color.parseColor("#FF9800") // Orange
+            "HIGH" -> android.graphics.Color.parseColor("#F44336") // Merah
             else -> android.graphics.Color.GRAY
         }
         tvBadge.setBackgroundColor(badgeColor)
         
-        // Set description
+        // Set description - lebih detail untuk full screen
         val description = when (level) {
-            "LOW" -> "Terdeteksi konten berisiko rendah di $appName."
-            "MEDIUM" -> "Terdeteksi konten berisiko sedang di $appName."
-            "HIGH" -> "Terdeteksi konten berisiko tinggi di $appName!"
-            else -> "Terdeteksi konten berbahaya di $appName."
+            "LOW" -> "Terdeteksi konten berisiko rendah pada aplikasi $appName.\n\nAnda disarankan untuk menutup aplikasi atau berhati-hati saat melanjutkan."
+            "MEDIUM" -> "Terdeteksi konten berisiko sedang pada aplikasi $appName.\n\nUntuk keamanan Anda, sangat disarankan untuk segera menutup aplikasi ini."
+            "HIGH" -> "⚠️ TERDETEKSI KONTEN BERISIKO TINGGI!\n\nAplikasi $appName menampilkan konten berbahaya.\n\nDEMI KEAMANAN ANDA, SEGERA TUTUP APLIKASI INI!"
+            else -> "Terdeteksi konten yang tidak pantas pada aplikasi $appName."
         }
         tvDesc.text = description
         
