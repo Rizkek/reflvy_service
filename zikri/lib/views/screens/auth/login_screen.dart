@@ -226,7 +226,10 @@ class _LoginScreenState extends State<LoginScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Transform.translate(
-                offset: const Offset(0, -40), // Pull up to overlap header
+                offset: const Offset(
+                  0,
+                  -20,
+                ), // Reduced overlap to prevent overflow
                 child: Card(
                   elevation: 8,
                   shadowColor: Colors.black12,

@@ -636,7 +636,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Transform.translate(
-                offset: const Offset(0, -60),
+                offset: const Offset(0, -30),
                 child: Card(
                   elevation: 8,
                   shadowColor: Colors.black12,
