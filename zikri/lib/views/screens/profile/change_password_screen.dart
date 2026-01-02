@@ -55,9 +55,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final user = FirebaseAuth.instance.currentUser;
     final email = _email ?? user?.email;
     if (user == null || email == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak ada pengguna aktif')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Tidak ada pengguna aktif')));
       return;
     }
 
@@ -74,9 +74,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password berhasil diubah')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Password berhasil diubah')));
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       String msg;
@@ -97,9 +97,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -110,103 +110,272 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     Navigator.pushNamed(
       context,
       '/forgot-password',
-      arguments: {
-        'initialEmail': email,
-        'readOnlyEmail': true,
-      },
+      arguments: {'initialEmail': email, 'readOnlyEmail': true},
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Ubah Password',
-          style: GoogleFonts.raleway(fontWeight: FontWeight.w700),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Password Lama', style: GoogleFonts.raleway(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _oldPwdController,
-                  obscureText: !_showOld,
-                  decoration: InputDecoration(
-                    hintText: 'Masukkan password lama',
-                    suffixIcon: IconButton(
-                      icon: Icon(_showOld ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _showOld = !_showOld),
-                    ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  ),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Password lama tidak boleh kosong' : null,
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Stack(
+        children: [
+          // Header Background
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 250,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF4A90E2), Color(0xFF8E2DE2)],
                 ),
-                const SizedBox(height: 16),
-                Text('Password Baru', style: GoogleFonts.raleway(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _newPwdController,
-                  obscureText: !_showNew,
-                  decoration: InputDecoration(
-                    hintText: 'Minimal 6 karakter',
-                    suffixIcon: IconButton(
-                      icon: Icon(_showNew ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _showNew = !_showNew),
-                    ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  ),
-                  validator: (v) => (v == null || v.length < 6) ? 'Password baru minimal 6 karakter' : null,
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(32),
                 ),
-                const SizedBox(height: 16),
-                Text('Konfirmasi Password Baru', style: GoogleFonts.raleway(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _confirmPwdController,
-                  obscureText: !_showConfirm,
-                  decoration: InputDecoration(
-                    hintText: 'Ulangi password baru',
-                    suffixIcon: IconButton(
-                      icon: Icon(_showConfirm ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _showConfirm = !_showConfirm),
-                    ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  ),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Konfirmasi password wajib diisi' : null,
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _goToForgot,
-                    child: const Text('Lupa password?'),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _changePassword,
-                    child: _isLoading
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Simpan Password Baru'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  // Custom App Bar Area
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'Ubah Password',
+                        style: GoogleFonts.outfit(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Main Content Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.lock_reset_rounded,
+                                size: 40,
+                                color: Color(0xFF3B82F6),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          _buildTextField(
+                            controller: _oldPwdController,
+                            label: 'Password Lama',
+                            hint: 'Masukkan password saat ini',
+                            isPassword: true,
+                            showPassword: _showOld,
+                            onToggle: () =>
+                                setState(() => _showOld = !_showOld),
+                            validator: (v) =>
+                                (v == null || v.isEmpty) ? 'Wajib diisi' : null,
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildTextField(
+                            controller: _newPwdController,
+                            label: 'Password Baru',
+                            hint: 'Minimal 6 karakter',
+                            isPassword: true,
+                            showPassword: _showNew,
+                            onToggle: () =>
+                                setState(() => _showNew = !_showNew),
+                            validator: (v) => (v == null || v.length < 6)
+                                ? 'Min 6 karakter'
+                                : null,
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildTextField(
+                            controller: _confirmPwdController,
+                            label: 'Konfirmasi Password',
+                            hint: 'Ulangi password baru',
+                            isPassword: true,
+                            showPassword: _showConfirm,
+                            onToggle: () =>
+                                setState(() => _showConfirm = !_showConfirm),
+                            validator: (v) =>
+                                (v == null || v.isEmpty) ? 'Wajib diisi' : null,
+                          ),
+
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _goToForgot,
+                              child: Text(
+                                'Lupa password?',
+                                style: GoogleFonts.raleway(
+                                  color: const Color(0xFF3B82F6),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 54,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _changePassword,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3B82F6),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Simpan Password',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required bool isPassword,
+    required bool showPassword,
+    required VoidCallback onToggle,
+    required String? Function(String?) validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.raleway(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: isPassword && !showPassword,
+          style: GoogleFonts.outfit(color: const Color(0xFF1E293B)),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.raleway(color: const Color(0xFF94A3B8)),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFEF4444)),
+            ),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      showPassword
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    onPressed: onToggle,
+                  )
+                : null,
+          ),
+          validator: validator,
+        ),
+      ],
     );
   }
 }

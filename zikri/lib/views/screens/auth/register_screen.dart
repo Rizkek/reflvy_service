@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import '../../../models/user.dart';
 import '../../../controllers/register_controller.dart';
+import '../../widgets/modern_loading.dart'; // Ensure this exists or use CircularProgressIndicator if not
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -28,7 +30,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _selectedGender;
   String? _selectedRole;
   DateTime? _selectedBirthdate;
-  final List<String> _genderOptions = ['Laki-laki', 'Perempuan'];
 
   @override
   void dispose() {
@@ -41,26 +42,102 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // UI Helper Methods
   Future<void> _selectBirthdate() async {
-    final DateTime? picked = await showDatePicker(
+    // Default date logic if none selected
+    final DateTime initialDate =
+        _selectedBirthdate ??
+        DateTime.now().subtract(
+          const Duration(days: 365 * 10),
+        ); // Default ~10 years old
+    DateTime tempPickedDate = initialDate;
+
+    await showModalBottomSheet(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFF3F88EB)),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext builder) {
+        return Container(
+          height: 320,
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            children: [
+              // Header Sheet
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Pilih Tanggal Lahir',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedBirthdate = tempPickedDate;
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: Text(
+                        'Selesai',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF3F88EB),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Cupertino Picker
+              Expanded(
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(
+                        fontSize: 20,
+                        color: Color(0xFF1E293B),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.date,
+                    initialDateTime: initialDate,
+                    minimumDate: DateTime(1900),
+                    maximumDate: DateTime.now(),
+                    onDateTimeChanged: (DateTime newDate) {
+                      tempPickedDate = newDate;
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
-          child: child!,
         );
       },
     );
-
-    if (picked != null && picked != _selectedBirthdate) {
-      setState(() {
-        _selectedBirthdate = picked;
-      });
-    }
   }
 
   String _formatDate(DateTime date) {
@@ -81,7 +158,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
-  // Function to show success dialog
+  // Dialog Helpers
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 15,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const ModernLoading(color: Color(0xFF3F88EB)),
+                const SizedBox(height: 20),
+                Text(
+                  'Sedang memproses...',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _hideLoadingDialog() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+  }
+
   void _showSuccessDialog(String title, String message) {
     AwesomeDialog(
       context: context,
@@ -89,25 +214,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       animType: AnimType.rightSlide,
       title: title,
       desc: message,
-      titleTextStyle: GoogleFonts.raleway(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
         color: const Color(0xFF181818),
       ),
-      descTextStyle: GoogleFonts.raleway(
+      descTextStyle: GoogleFonts.poppins(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: const Color(0xFF979797),
+        color: const Color(0xFF64748B),
       ),
       btnOkColor: const Color(0xFF3F88EB),
-      btnOkText: 'OK',
+      btnOkText: 'Login Sekarang',
       btnOkOnPress: () {
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       },
     ).show();
   }
 
-  // Function to show warning dialog
   void _showWarningDialog(String title, String message, VoidCallback onOk) {
     AwesomeDialog(
       context: context,
@@ -115,15 +238,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       animType: AnimType.rightSlide,
       title: title,
       desc: message,
-      titleTextStyle: GoogleFonts.raleway(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
         color: const Color(0xFF181818),
       ),
-      descTextStyle: GoogleFonts.raleway(
+      descTextStyle: GoogleFonts.poppins(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: const Color(0xFF979797),
+        color: const Color(0xFF64748B),
       ),
       btnOkColor: Colors.orange,
       btnOkText: 'OK',
@@ -131,7 +253,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ).show();
   }
 
-  // Function to show error dialog
   void _showErrorDialog(String title, String message) {
     AwesomeDialog(
       context: context,
@@ -139,15 +260,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       animType: AnimType.rightSlide,
       title: title,
       desc: message,
-      titleTextStyle: GoogleFonts.raleway(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
         color: const Color(0xFF181818),
       ),
-      descTextStyle: GoogleFonts.raleway(
+      descTextStyle: GoogleFonts.poppins(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: const Color(0xFF979797),
+        color: const Color(0xFF64748B),
       ),
       btnOkColor: Colors.red,
       btnOkText: 'OK',
@@ -156,15 +276,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    // Validate required fields first
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptTerms) {
       _showErrorDialog(
         'Persetujuan Diperlukan',
-        'Anda harus menyetujui syarat dan ketentuan untuk melanjutkan registrasi.',
+        'Anda harus menyetujui syarat dan ketentuan.',
       );
       return;
     }
@@ -201,17 +318,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       role: _selectedRole!,
     );
 
-    // Start loading
     setState(() {
       _isLoading = true;
     });
+    _showLoadingDialog();
 
     try {
-      // Call controller to register
+      // simulate network delay for better UX feel
+      await Future.delayed(const Duration(milliseconds: 1500));
+
       final result = await _registerController.register(
         user,
         _confirmPasswordController.text,
       );
+
+      _hideLoadingDialog();
 
       if (mounted) {
         if (result.success) {
@@ -241,8 +362,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
     } catch (e) {
+      _hideLoadingDialog();
       if (mounted) {
-        _showErrorDialog('Terjadi Kesalahan', 'Kesalahan tidak terduga: $e');
+        _showErrorDialog('Terjadi Kesalahan', 'Error: $e');
       }
     } finally {
       if (mounted) {
@@ -253,680 +375,153 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF181818)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Daftar Akun',
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    String? hint,
+    bool isPassword = false,
+    bool? obscureText,
+    VoidCallback? onVisibilityToggle,
+    String? Function(String?)? validator,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
           style: GoogleFonts.raleway(
-            color: const Color(0xFF181818),
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1E293B),
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 24),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: obscureText ?? false,
+          keyboardType: keyboardType,
+          style: GoogleFonts.poppins(color: Colors.black87),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
+            prefixIcon: Icon(icon, color: const Color(0xFF3F88EB)),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      (obscureText ?? false)
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: Colors.grey[500],
+                    ),
+                    onPressed: onVisibilityToggle,
+                  )
+                : null,
+            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF3F88EB),
+                width: 1.5,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            ),
+          ),
+          validator: validator,
+        ),
+      ],
+    );
+  }
 
-              // Header
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3F88EB),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.person_add_rounded,
-                        color: Colors.white,
-                        size: 40,
-                      ),
+  Widget _buildRoleCard(
+    String title,
+    String value,
+    IconData icon,
+    String subtitle,
+  ) {
+    final isSelected = _selectedRole == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedRole = value;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFFEFF6FF)
+                : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? const Color(0xFF3F88EB) : Colors.transparent,
+              width: 2,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF3F88EB).withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Bergabung dengan Paradise',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                  ]
+                : [],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFF3F88EB) : Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    if (!isSelected)
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        blurRadius: 5,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Buat akun baru untuk mulai browsing aman',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF979797),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
                   ],
                 ),
+                child: Icon(
+                  icon,
+                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  size: 28,
+                ),
               ),
-
-              const SizedBox(height: 32),
-
-              // Registration Form
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Name Field
-                    Text(
-                      'Nama Lengkap',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      keyboardType: TextInputType.name,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan nama lengkap Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Nama tidak boleh kosong';
-                        }
-                        if (value.length < 2) {
-                          return 'Nama minimal 2 karakter';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Email Field
-                    Text(
-                      'Email',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan email Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email tidak boleh kosong';
-                        }
-                        if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)) {
-                          return 'Format email tidak valid';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Password Field
-                    Text(
-                      'Password',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        hintText: 'Buat password yang kuat',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: const Color(0xFF979797),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password tidak boleh kosong';
-                        }
-                        if (value.length < 8) {
-                          return 'Password minimal 8 karakter';
-                        }
-                        if (!RegExp(
-                          r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)',
-                        ).hasMatch(value)) {
-                          return 'Password harus mengandung huruf besar, kecil, dan angka';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Confirm Password Field
-                    Text(
-                      'Konfirmasi Password',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan ulang password Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureConfirmPassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: const Color(0xFF979797),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword;
-                            });
-                          },
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Konfirmasi password tidak boleh kosong';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'Password tidak cocok';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Role Selection
-                    Text(
-                      'Peran',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: _selectedRole,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih peran',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      items: ['Anak', 'Orang Tua'].map((String role) {
-                        return DropdownMenuItem<String>(
-                          value: role == 'Orang Tua' ? 'parent' : 'child',
-                          child: Text(
-                            role,
-                            style: GoogleFonts.raleway(
-                              fontSize: 14,
-                              color: const Color(0xFF181818),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedRole = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Pilih peran';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Gender Selection
-                    Text(
-                      'Jenis Kelamin',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: _selectedGender,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih jenis kelamin',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      items: _genderOptions.map((String gender) {
-                        return DropdownMenuItem<String>(
-                          value: gender,
-                          child: Text(
-                            gender,
-                            style: GoogleFonts.raleway(
-                              fontSize: 14,
-                              color: const Color(0xFF181818),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedGender = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Pilih jenis kelamin';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Birthdate Selection
-                    Text(
-                      'Tanggal Lahir',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _selectBirthdate,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: _selectedBirthdate == null
-                                ? const Color(0xFFE0E0E0)
-                                : const Color(0xFF3F88EB),
-                            width: _selectedBirthdate == null ? 1 : 2,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _selectedBirthdate == null
-                                  ? 'Pilih tanggal lahir'
-                                  : _formatDate(_selectedBirthdate!),
-                              style: GoogleFonts.raleway(
-                                color: _selectedBirthdate == null
-                                    ? const Color(0xFF979797)
-                                    : const Color(0xFF181818),
-                                fontSize: 14,
-                              ),
-                            ),
-                            const Icon(
-                              Icons.calendar_today,
-                              color: Color(0xFF979797),
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Terms and Conditions Checkbox
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Checkbox(
-                          value: _acceptTerms,
-                          onChanged: (value) {
-                            setState(() {
-                              _acceptTerms = value ?? false;
-                            });
-                          },
-                          activeColor: const Color(0xFF3F88EB),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: RichText(
-                              text: TextSpan(
-                                style: GoogleFonts.raleway(
-                                  color: const Color(0xFF979797),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                children: [
-                                  const TextSpan(text: 'Saya menyetujui '),
-                                  TextSpan(
-                                    text: 'Syarat dan Ketentuan',
-                                    style: GoogleFonts.raleway(
-                                      color: const Color(0xFF3F88EB),
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                  const TextSpan(text: ' serta '),
-                                  TextSpan(
-                                    text: 'Kebijakan Privasi',
-                                    style: GoogleFonts.raleway(
-                                      color: const Color(0xFF3F88EB),
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Register Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _register,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3F88EB),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                'Daftar',
-                                style: GoogleFonts.raleway(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Login Link
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Sudah punya akun? ',
-                            style: GoogleFonts.raleway(
-                              color: const Color(0xFF979797),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/login');
-                            },
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Masuk',
-                              style: GoogleFonts.raleway(
-                                color: const Color(0xFF3F88EB),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-                  ],
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: isSelected
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: const Color(0xFF94A3B8),
                 ),
               ),
             ],
@@ -935,4 +530,439 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+
+  Widget _buildGenderOption(String label, String value, IconData icon) {
+    final isSelected = _selectedGender == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedGender = value;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF3F88EB)
+                : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF3F88EB)
+                  : Colors.transparent, // Removed border for unselected
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? Colors.white : const Color(0xFF64748B),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Curved Header Background (Matching Login)
+            Stack(
+              children: [
+                ClipPath(
+                  clipper: HeaderClipper(),
+                  child: Container(
+                    height: 240, // Slightly shorter than login
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF4A90E2), Color(0xFF8E2DE2)],
+                      ),
+                    ),
+                  ),
+                ),
+
+                Positioned(
+                  top: 60,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Buat Akun Baru',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Bergabunglah bersama kami',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Form Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Transform.translate(
+                offset: const Offset(0, -60),
+                child: Card(
+                  elevation: 8,
+                  shadowColor: Colors.black12,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 1. Role Selection
+                          Text(
+                            'Pilih Peran',
+                            style: GoogleFonts.raleway(
+                              color: const Color(0xFF1E293B),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              _buildRoleCard(
+                                'Orang Tua',
+                                'parent',
+                                Icons.family_restroom,
+                                'Pantau & lindungi',
+                              ),
+                              const SizedBox(width: 16),
+                              _buildRoleCard(
+                                'Anak',
+                                'child',
+                                Icons.child_care,
+                                'Aman berselancar',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          // 2. Name
+                          _buildTextField(
+                            label: 'Nama Lengkap',
+                            controller: _nameController,
+                            icon: Icons.person_outline,
+                            hint: 'Jhon Doe',
+                            validator: (v) =>
+                                v!.isEmpty ? 'Nama wajib diisi' : null,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 3. Email
+                          _buildTextField(
+                            label: 'Email',
+                            controller: _emailController,
+                            icon: Icons.email_outlined,
+                            hint: 'user@example.com',
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (v) {
+                              if (v == null || v.isEmpty)
+                                return 'Email wajib diisi';
+                              if (!v.contains('@')) return 'Email tidak valid';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 4. Gender
+                          Text(
+                            'Jenis Kelamin',
+                            style: GoogleFonts.raleway(
+                              color: const Color(0xFF1E293B),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              _buildGenderOption(
+                                'Laki-laki',
+                                'Laki-laki',
+                                Icons.male,
+                              ),
+                              const SizedBox(width: 12),
+                              _buildGenderOption(
+                                'Perempuan',
+                                'Perempuan',
+                                Icons.female,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 5. Birthdate
+                          Text(
+                            'Tanggal Lahir',
+                            style: GoogleFonts.raleway(
+                              color: const Color(0xFF1E293B),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: _selectBirthdate,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.transparent, // Clean look
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_month_outlined,
+                                    color: Color(0xFF3F88EB),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _selectedBirthdate == null
+                                        ? 'Pilh Tanggal Lahir'
+                                        : _formatDate(_selectedBirthdate!),
+                                    style: GoogleFonts.poppins(
+                                      color: _selectedBirthdate == null
+                                          ? Colors.grey[400]
+                                          : Colors.black87,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.grey[600],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // 6. Password
+                          _buildTextField(
+                            label: 'Password',
+                            controller: _passwordController,
+                            icon: Icons.lock_outline,
+                            hint: '••••••••',
+                            isPassword: true,
+                            obscureText: _obscurePassword,
+                            onVisibilityToggle: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            validator: (v) =>
+                                v!.length < 8 ? 'Min 8 karakter' : null,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 7. Confirm Password
+                          _buildTextField(
+                            label: 'Konfirmasi Password',
+                            controller: _confirmPasswordController,
+                            icon: Icons.lock_outline,
+                            hint: '••••••••',
+                            isPassword: true,
+                            obscureText: _obscureConfirmPassword,
+                            onVisibilityToggle: () => setState(
+                              () => _obscureConfirmPassword =
+                                  !_obscureConfirmPassword,
+                            ),
+                            validator: (v) => v != _passwordController.text
+                                ? 'Password tidak sama'
+                                : null,
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Terms Checkbox
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: _acceptTerms,
+                                  activeColor: const Color(0xFF3F88EB),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _acceptTerms = val ?? false;
+                                    });
+                                  },
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text.rich(
+                                  TextSpan(
+                                    text: 'Saya menyetujui ',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: 'Syarat & Ketentuan',
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF3F88EB),
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 30),
+
+                          // Register Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _register,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3F88EB),
+                                foregroundColor: Colors.white,
+                                elevation: 5,
+                                shadowColor: const Color(0x403F88EB),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: Text(
+                                'Daftar Sekarang',
+                                style: GoogleFonts.raleway(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24.0, top: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Sudah punya akun? ',
+                    style: GoogleFonts.raleway(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, '/login'),
+                    child: Text(
+                      'Masuk',
+                      style: GoogleFonts.raleway(
+                        color: const Color(0xFF8E2DE2),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Reusing HeaderClipper from LoginScreen (duplicated here to avoid import issues if moved)
+class HeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height - 50);
+    var firstControlPoint = Offset(size.width / 4, size.height);
+    var firstEndPoint = Offset(size.width / 2, size.height);
+    var secondControlPoint = Offset(size.width * 3 / 4, size.height);
+    var secondEndPoint = Offset(size.width, size.height - 50);
+
+    path.quadraticBezierTo(
+      firstControlPoint.dx,
+      firstControlPoint.dy,
+      firstEndPoint.dx,
+      firstEndPoint.dy,
+    );
+    path.quadraticBezierTo(
+      secondControlPoint.dx,
+      secondControlPoint.dy,
+      secondEndPoint.dx,
+      secondEndPoint.dy,
+    );
+
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

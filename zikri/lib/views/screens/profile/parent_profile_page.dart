@@ -39,86 +39,173 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        title: Text(
-          'Profile',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: const Color(0xFF3B82F6),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Stack(
+        children: [
+          // Background Gradient
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 300,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF4A90E2), Color(0xFF8E2DE2)],
+                ),
+              ),
             ),
-            child: const Icon(Icons.admin_panel_settings, size: 24),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: Image.asset(
+                            'assets/images/logo_paradise.jpg',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Color(0xFF3F88EB),
+                                child: Icon(
+                                  Icons.shield,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'Profile Orang Tua',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.settings_outlined,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Main Content Card
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(32),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Profile Card - Overlapping effect simulation created by gradient order, but here kept solid
+                          _buildProfileCard(),
+                          const SizedBox(height: 24),
+
+                          // Stats Card
+                          _buildStatsCard(),
+                          const SizedBox(height: 24),
+
+                          // Quick Settings
+                          _buildQuickSettings(),
+                          const SizedBox(height: 24),
+
+                          // Anak Terhubung
+                          _buildLinkedChildren(),
+                          const SizedBox(height: 32),
+
+                          // Logout Button
+                          _buildLogoutButton(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Card
-            _buildProfileCard(),
-            const SizedBox(height: 20),
-
-            // Stats Card
-            _buildStatsCard(),
-            const SizedBox(height: 20),
-
-            // Quick Settings
-            _buildQuickSettings(),
-            const SizedBox(height: 20),
-
-            // Anak Terhubung
-            _buildLinkedChildren(),
-            const SizedBox(height: 24),
-
-            // Logout Button
-            _buildLogoutButton(),
-          ],
-        ),
       ),
     );
   }
 
   Widget _buildProfileCard() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-              ),
-              borderRadius: BorderRadius.circular(16),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF3F88EB), width: 2),
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 32),
+            child: CircleAvatar(
+              radius: 35,
+              backgroundColor: const Color(0xFFEFF6FF),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 35,
+                color: Color(0xFF3F88EB),
+              ),
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,6 +224,26 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                   style: GoogleFonts.raleway(
                     color: const Color(0xFF64748B),
                     fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Akun Premium',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF166534),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -154,17 +261,19 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
 
     return Obx(
       () => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF6366F1).withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -174,19 +283,19 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
               child: _buildStatItem(
                 '${linkController.linkedChildren.length}',
                 'Anak Terhubung',
-                Icons.family_restroom,
+                Icons.supervised_user_circle,
               ),
             ),
             Container(
               width: 1,
-              height: 50,
-              color: Colors.white.withOpacity(0.3),
+              height: 40,
+              color: Colors.white.withOpacity(0.2),
             ),
             Expanded(
               child: _buildStatItem(
                 '${linkController.linkedChildren.where((c) => c.alertsToday > 0).length}',
-                'Butuh Perhatian',
-                Icons.warning_amber,
+                'Perlu Dicek',
+                Icons.notification_important_rounded,
               ),
             ),
           ],
@@ -198,19 +307,22 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
   Widget _buildStatItem(String value, String label, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white, size: 28),
-        const SizedBox(height: 8),
+        Icon(icon, color: Colors.white.withOpacity(0.9), size: 28),
+        const SizedBox(height: 12),
         Text(
           value,
           style: GoogleFonts.outfit(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: GoogleFonts.raleway(color: Colors.white70, fontSize: 12),
+          style: GoogleFonts.raleway(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 13,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
@@ -222,30 +334,32 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Pengaturan Cepat',
+          'Menu Fitur',
           style: GoogleFonts.outfit(
             color: const Color(0xFF1E293B),
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _buildSettingTile(
-          'Pengaturan Proteksi',
-          'Atur level sensitivitas dan blokir aplikasi',
-          Icons.security,
+          'Kontrol Proteksi',
+          'Atur sensitivitas & blokir',
+          Icons.security_rounded,
+          Colors.blue,
           onTap: () => Get.to(() => const ParentSettingsScreen()),
         ),
         const SizedBox(height: 12),
         _buildSettingTile(
           'Notifikasi',
-          'Kelola alert dan pemberitahuan',
-          Icons.notifications,
+          'Riwayat alert keamanan',
+          Icons.notifications_active_rounded,
+          Colors.orange,
           onTap: () {
             Get.snackbar(
-              'Coming Soon',
-              'Fitur notifikasi akan segera hadir',
-              backgroundColor: Colors.blue,
+              'Segera Hadir',
+              'Fitur notifikasi lanjutan sedang dikembangkan',
+              backgroundColor: Colors.indigo,
               colorText: Colors.white,
             );
           },
@@ -257,7 +371,8 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
   Widget _buildSettingTile(
     String title,
     String subtitle,
-    IconData icon, {
+    IconData icon,
+    Color color, {
     VoidCallback? onTap,
   }) {
     return GestureDetector(
@@ -266,10 +381,11 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.grey.withOpacity(0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -278,12 +394,12 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: const Color(0xFF6366F1), size: 24),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -298,6 +414,7 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: GoogleFonts.raleway(
@@ -309,9 +426,9 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
               ),
             ),
             const Icon(
-              Icons.arrow_forward_ios,
-              color: Color(0xFF94A3B8),
-              size: 16,
+              Icons.chevron_right_rounded,
+              color: Color(0xFFCBD5E1),
+              size: 24,
             ),
           ],
         ),
@@ -332,7 +449,7 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Anak Terhubung',
+                'Daftar Anak',
                 style: GoogleFonts.outfit(
                   color: const Color(0xFF1E293B),
                   fontSize: 18,
@@ -345,37 +462,46 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.1),
+                  color: const Color(0xFFE0E7FF),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${linkController.linkedChildren.length} anak',
-                  style: GoogleFonts.raleway(
-                    color: const Color(0xFF3B82F6),
+                  '${linkController.linkedChildren.length} Akun',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF4F46E5),
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           if (linkController.linkedChildren.isEmpty)
             Container(
-              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFF1F5F9), width: 2),
               ),
-              child: Center(
-                child: Text(
-                  'Belum ada anak terhubung',
-                  style: GoogleFonts.raleway(
-                    color: const Color(0xFF64748B),
-                    fontSize: 14,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.person_add_disabled_rounded,
+                    size: 48,
+                    color: Colors.grey[300],
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Belum ada anak terhubung',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             )
           else
@@ -385,10 +511,10 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.grey.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -397,14 +523,14 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 24,
+                      radius: 26,
                       backgroundColor: const Color(0xFF6366F1),
                       child: Text(
                         child.name[0].toUpperCase(),
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                          fontSize: 20,
                         ),
                       ),
                     ),
@@ -421,23 +547,26 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(
-                                child.isOnline
-                                    ? Icons.circle
-                                    : Icons.circle_outlined,
-                                size: 12,
-                                color: child.isOnline
-                                    ? Colors.green
-                                    : Colors.grey,
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: child.isOnline
+                                      ? const Color(0xFF22C55E)
+                                      : const Color(0xFF94A3B8),
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 child.isOnline ? 'Online' : 'Offline',
                                 style: GoogleFonts.raleway(
                                   color: const Color(0xFF64748B),
-                                  fontSize: 13,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -448,17 +577,18 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                     if (child.alertsToday > 0)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
+                          horizontal: 12,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFCA5A5)),
                         ),
                         child: Text(
                           '${child.alertsToday} Alert',
                           style: GoogleFonts.outfit(
-                            color: Colors.red,
+                            color: const Color(0xFFDC2626),
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -476,20 +606,31 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
   Widget _buildLogoutButton() {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         onPressed: _logout,
-        icon: const Icon(Icons.logout),
-        label: Text(
-          'Logout',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
+          backgroundColor: const Color(0xFFFEF2F2),
+          foregroundColor: const Color(0xFFEF4444),
+          elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFFECACA)),
           ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.logout_rounded),
+            const SizedBox(width: 8),
+            Text(
+              'Keluar Aplikasi',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );

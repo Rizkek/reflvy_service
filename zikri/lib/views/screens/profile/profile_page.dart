@@ -45,69 +45,133 @@ class _ProfilePageState extends State<ProfilePage> {
       _loginTime = DateTime.now();
       _tokenExpired = false;
     });
-
-    /* 
-    // Original Code
-    final user = await SecureStorageService.getUserData();
-    final isExpired = await SecureStorageService.isTokenExpired();
-    if (!mounted) return;
-    if (user != null) {
-      setState(() {
-        _name = user.displayName?.trim().isNotEmpty == true ? user.displayName!.trim() : 'Pengguna';
-        _email = user.email;
-        _isVerified = user.isVerified == true;
-        _gender = user.gender;
-        _age = user.age;
-        _uid = user.uid;
-        _loginTime = user.loginTime;
-        _tokenExpired = isExpired;
-      });
-      return;
-    }
-    // Fallback to raw storage (if any legacy fields exist)
-    final data = await SecureStorageService.getAllData();
-    if (!mounted) return;
-    setState(() {
-      _name = data['display_name'] ?? 'Pengguna';
-      _email = data['email'] ?? '-';
-      _isVerified = data['is_verified'] == 'true';
-      _gender = data['gender'];
-      _age = int.tryParse(data['age'] ?? '');
-      _uid = data['uid'];
-      final lt = data['login_time'];
-      if (lt != null) {
-        _loginTime = DateTime.tryParse(lt);
-      }
-      _tokenExpired = isExpired;
-    });
-    */
   }
 
   Future<void> _promptUpdateDisplayName() async {
     final controller = TextEditingController(text: _name ?? '');
-    final newName = await showDialog<String>(
+
+    // Using simple dialog or bottom sheet for input
+    final newName = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Ubah Display Name'),
-          content: TextField(
-            controller: controller,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'Display Name',
-              hintText: 'Masukkan nama baru',
-            ),
+        return Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            top: 24,
+            left: 24,
+            right: 24,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-              child: const Text('Simpan'),
-            ),
-          ],
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Ubah Display Name',
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Nama ini akan tampil di profil Anda.',
+                style: GoogleFonts.raleway(
+                  fontSize: 14,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  color: const Color(0xFF1E293B),
+                ),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  hintText: 'Masukkan nama baru',
+                  hintStyle: GoogleFonts.raleway(
+                    color: const Color(0xFF94A3B8),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: Color(0xFF3B82F6),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () =>
+                          Navigator.pop(ctx, controller.text.trim()),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B82F6),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Simpan',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );
@@ -174,323 +238,344 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isSmall = size.height < 700;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        elevation: 0,
-        title: Text(
-          'Profile',
-          style: GoogleFonts.inter(
-            color: const Color(0xFF111827),
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: RefreshIndicator(
-        color: const Color(0xFF3B82F6),
-        onRefresh: _loadProfile,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Stack(
+        children: [
+          // Background Gradient
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 300,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF4A90E2), Color(0xFF8E2DE2)],
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: isSmall ? 26 : 30,
-                      backgroundColor: Colors.white.withOpacity(0.15),
-                      child: CircleAvatar(
-                        radius: isSmall ? 22 : 26,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          (_name != null && _name!.isNotEmpty)
-                              ? _name![0].toUpperCase()
-                              : 'U',
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF1F2937),
-                            fontSize: isSmall ? 18 : 20,
-                            fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
                           ),
                         ),
+                        child: const Icon(Icons.person, color: Colors.white),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'Profile Pengguna',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      // Refresh Button
+                      GestureDetector(
+                        onTap: _loadProfile,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
+                          child: const Icon(Icons.refresh, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Main Content
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(32),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          // Profile Card
+                          _buildProfileCard(),
+                          const SizedBox(height: 24),
+
+                          // Stats Row
+                          _buildStatsRow(),
+                          const SizedBox(height: 24),
+
+                          // Personal Info
+                          _sectionCard(
+                            title: 'Informasi Pribadi',
+                            icon: Icons.person_outline,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  _name ?? 'Pengguna',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: isSmall ? 16 : 18,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
+                              _editableInfoRow(
+                                'Nama Lengkap',
+                                _name ?? '-',
+                                onEdit: _updatingName
+                                    ? null
+                                    : _promptUpdateDisplayName,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _isVerified
-                                      ? Colors.white.withOpacity(0.2)
-                                      : Colors.white.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      _isVerified
-                                          ? Icons.verified
-                                          : Icons.error_outline,
-                                      size: 14,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _isVerified ? 'Verified' : 'Unverified',
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              const SizedBox(height: 16),
+                              _infoRow('Email', _email ?? '-'),
+                              const SizedBox(height: 16),
+                              _infoRow('Jenis Kelamin', _gender ?? '-'),
+                              const SizedBox(height: 16),
+                              _infoRow(
+                                'Umur',
+                                _age != null ? '$_age Tahun' : '-',
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _email ?? '-',
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: isSmall ? 12 : 13,
-                            ),
+                          const SizedBox(height: 20),
+
+                          // Account Security
+                          _sectionCard(
+                            title: 'Keamanan Akun',
+                            icon: Icons.security,
+                            children: [
+                              _infoRow(
+                                'Status Verifikasi',
+                                _isVerified
+                                    ? 'Terverifikasi'
+                                    : 'Belum Verifikasi',
+                                valueColor: _isVerified
+                                    ? Colors.green
+                                    : Colors.orange,
+                              ),
+                              const SizedBox(height: 16),
+                              _infoRow(
+                                'Token Session',
+                                _tokenExpired ? 'Expired' : 'Valid',
+                                valueColor: _tokenExpired
+                                    ? Colors.red
+                                    : Colors.green,
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 20),
+
+                          // Parent Link Section
+                          _buildLinkToParentSection(),
+                          const SizedBox(height: 32),
+
+                          // Logout Button
+                          _buildLogoutButton(),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Quick stats
-              Row(
-                children: [
-                  Expanded(
-                    child: _statChip(
-                      icon: Icons.fingerprint,
-                      label: 'UID',
-                      value: _uid != null && _uid!.length > 8
-                          ? '${_uid!.substring(0, 4)}...${_uid!.substring(_uid!.length - 4)}'
-                          : (_uid ?? '-'),
-                      color: const Color(0xFF3B82F6),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _statChip(
-                      icon: _tokenExpired ? Icons.lock_clock : Icons.lock_open,
-                      label: 'Token',
-                      value: _tokenExpired ? 'Expired' : 'Valid',
-                      color: _tokenExpired
-                          ? const Color(0xFFEF4444)
-                          : const Color(0xFF10B981),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _statChip(
-                      icon: Icons.schedule,
-                      label: 'Login',
-                      value: _loginTime != null
-                          ? _formatDate(_loginTime!)
-                          : '-',
-                      color: const Color(0xFFF59E0B),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Personal Info
-              _sectionCard(
-                title: 'Informasi Pribadi',
-                children: [
-                  _editableInfoRow(
-                    'Nama',
-                    _name ?? '-',
-                    onEdit: _updatingName ? null : _promptUpdateDisplayName,
-                  ),
-                  const SizedBox(height: 10),
-                  _infoRow('Email', _email ?? '-'),
-                  const SizedBox(height: 10),
-                  _infoRow('Gender', _gender ?? '-'),
-                  const SizedBox(height: 10),
-                  _infoRow('Umur', _age != null ? '$_age' : '-'),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Account & Security
-              _sectionCard(
-                title: 'Akun & Keamanan',
-                children: [
-                  _infoRow('UID', _uid ?? '-'),
-                  const SizedBox(height: 10),
-                  _infoRow(
-                    'Status Email',
-                    _isVerified ? 'Terverifikasi' : 'Belum Verifikasi',
-                  ),
-                  const SizedBox(height: 10),
-                  _infoRow('Token', _tokenExpired ? 'Expired' : 'Valid'),
-                  const SizedBox(height: 10),
-                  _infoRow(
-                    'Login Terakhir',
-                    _loginTime != null ? _formatDate(_loginTime!) : '-',
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Link to Parent Section (Child Only)
-              _buildLinkToParentSection(),
-
-              const SizedBox(height: 12),
-
-              // Navigate to Change Password Page
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/change-password',
-                      arguments: {'email': _email},
-                    );
-                  },
-                  icon: const Icon(Icons.lock_reset),
-                  label: const Text('Ubah Password'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(color: Color(0xFF3B82F6)),
-                    foregroundColor: const Color(0xFF1F2937),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Actions
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _loadProfile,
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('Segarkan'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: Color(0xFF3B82F6)),
-                        foregroundColor: const Color(0xFF1F2937),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _logout,
-                      icon: const Icon(Icons.logout, size: 18),
-                      label: const Text('Logout'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _buildProfileCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF3B82F6), width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 35,
+              backgroundColor: const Color(0xFFEFF6FF),
+              child: Text(
+                (_name != null && _name!.isNotEmpty)
+                    ? _name![0].toUpperCase()
+                    : 'U',
+                style: GoogleFonts.outfit(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF3B82F6),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _name ?? 'Pengguna',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF1E293B),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _email ?? '-',
+                  style: GoogleFonts.raleway(
+                    color: const Color(0xFF64748B),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDBEAFE),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'User Regular',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF1E40AF),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsRow() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            color: const Color(0xFF6B7280),
-            fontSize: 13,
+        Expanded(
+          child: _statCard(
+            icon: Icons.schedule,
+            label: 'Login Terakhir',
+            value: _loginTime != null
+                ? '${_loginTime!.hour}:${_loginTime!.minute}'
+                : '-',
+            color: Colors.orange,
           ),
         ),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            color: const Color(0xFF111827),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+        const SizedBox(width: 16),
+        Expanded(
+          child: _statCard(
+            icon: Icons.fingerprint,
+            label: 'ID Pengguna',
+            value: _uid != null && _uid!.length > 4
+                ? '...${_uid!.substring(_uid!.length - 4)}'
+                : '-',
+            color: Colors.purple,
           ),
         ),
       ],
     );
   }
 
-  Widget _sectionCard({required String title, required List<Widget> children}) {
+  Widget _statCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              color: const Color(0xFF94A3B8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -499,18 +584,48 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              color: const Color(0xFF111827),
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 20, color: const Color(0xFF64748B)),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const Divider(height: 24),
           ...children,
         ],
       ),
+    );
+  }
+
+  Widget _infoRow(String label, String value, {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.raleway(
+            color: const Color(0xFF64748B),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            color: valueColor ?? const Color(0xFF1E293B),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 
@@ -520,112 +635,37 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            color: const Color(0xFF6B7280),
-            fontSize: 13,
+          style: GoogleFonts.raleway(
+            color: const Color(0xFF64748B),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
         ),
         Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               value,
-              style: GoogleFonts.inter(
-                color: const Color(0xFF111827),
-                fontSize: 13,
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF1E293B),
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 6),
-            IconButton(
-              tooltip: 'Ubah nama',
-              icon: _updatingName
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.edit, size: 18),
-              onPressed: onEdit,
-              splashRadius: 18,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
+            if (onEdit != null) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onEdit,
+                child: const Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: Color(0xFF3B82F6),
+                ),
+              ),
+            ],
           ],
         ),
       ],
     );
-  }
-
-  Widget _statChip({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF6B7280),
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF111827),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime dt) {
-    // e.g., 2025-09-27 14:35
-    final y = dt.year.toString().padLeft(4, '0');
-    final m = dt.month.toString().padLeft(2, '0');
-    final d = dt.day.toString().padLeft(2, '0');
-    final hh = dt.hour.toString().padLeft(2, '0');
-    final mm = dt.minute.toString().padLeft(2, '0');
-    return '$d/$m/$y $hh:$mm';
   }
 
   Widget _buildLinkToParentSection() {
@@ -634,121 +674,120 @@ class _ProfilePageState extends State<ProfilePage> {
         : Get.put(LinkController());
 
     return Obx(
-      () => _sectionCard(
-        title: '🔗 Hubungkan dengan Orang Tua',
-        children: [
-          if (linkController.isLinkedToParent.value)
-            // Already Linked
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Terhubung',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                            fontSize: 15,
-                          ),
-                        ),
-                        Text(
-                          'Dipantau oleh: ${linkController.parentName.value}',
-                          style: GoogleFonts.raleway(
-                            color: const Color(0xFF64748B),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            // Not Linked - Show Input
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      () => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
+                const Icon(Icons.link, size: 20, color: Color(0xFF64748B)),
+                const SizedBox(width: 10),
                 Text(
-                  'Belum terhubung dengan orang tua',
-                  style: GoogleFonts.raleway(
-                    color: const Color(0xFF64748B),
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Masukkan kode (123-456)',
-                    hintStyle: GoogleFonts.raleway(
-                      color: const Color(0xFF94A3B8),
-                      fontSize: 14,
-                    ),
-                    prefixIcon: const Icon(Icons.pin, color: Color(0xFF4A90E2)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF4A90E2),
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 7,
-                  onChanged: (value) async {
-                    // Auto-submit when 6 digits entered (with dash = 7 chars)
-                    if (value.replaceAll('-', '').length == 6) {
-                      final code = value.replaceAll('-', '');
-                      final success = await linkController.verifyCode(code);
-                      if (success) {
-                        Get.snackbar(
-                          'Berhasil!',
-                          'Terhubung dengan ${linkController.parentName.value}',
-                          backgroundColor: Colors.green,
-                          colorText: Colors.white,
-                        );
-                      } else {
-                        Get.snackbar(
-                          'Gagal',
-                          'Kode tidak valid atau sudah expired',
-                          backgroundColor: Colors.red,
-                          colorText: Colors.white,
-                        );
-                      }
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Minta kode 6 digit dari orang tua Anda',
-                  style: GoogleFonts.raleway(
-                    color: const Color(0xFF94A3B8),
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
+                  'Hubungkan Orang Tua',
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
               ],
             ),
-        ],
+            const SizedBox(height: 16),
+            if (linkController.isLinkedToParent.value)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: Color(0xFF166534),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Terhubung dengan ${linkController.parentName.value}',
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFF166534),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Masukkan kode 6-digit dari orang tua:',
+                    style: GoogleFonts.raleway(
+                      color: const Color(0xFF64748B),
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Cth: 123-456',
+                      hintStyle: GoogleFonts.raleway(
+                        color: const Color(0xFF94A3B8),
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (value) async {
+                      if (value.replaceAll('-', '').length == 6) {
+                        final code = value.replaceAll('-', '');
+                        await linkController.verifyCode(code);
+                      }
+                    },
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _logout,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFEF2F2),
+          foregroundColor: const Color(0xFFEF4444),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFFECACA)),
+          ),
+        ),
+        child: Text(
+          'Keluar Aplikasi',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
       ),
     );
   }

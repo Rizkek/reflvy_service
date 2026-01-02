@@ -19,7 +19,6 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
   @override
   void initState() {
     super.initState();
-    // Ensure service is registered
     if (!Get.isRegistered<AutoScreenshotService>()) {
       Get.put(AutoScreenshotService());
     }
@@ -120,39 +119,110 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        title: Text(
-          'Paradise Monitor',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC), // Slate-50
+      body: Stack(
+        children: [
+          // Background Gradient decoration
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 300,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF4A90E2), Color(0xFF8E2DE2)],
+                ),
+              ),
+            ),
           ),
-        ),
-        backgroundColor: const Color(0xFF3B82F6),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Status Card
-            _buildStatusCard(),
-            const SizedBox(height: 20),
 
-            // Stats Grid
-            _buildStatsGrid(),
-            const SizedBox(height: 20),
+          SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.shield_moon,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Paradise Monitor',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'Real-time Protection',
+                            style: GoogleFonts.raleway(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
-            // Control Button
-            _buildControlButton(),
-            const SizedBox(height: 24),
+                // Main Content
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(32),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          // Status Card with Glassmorphism feel (simulated)
+                          _buildStatusCard(),
+                          const SizedBox(height: 24),
 
-            // Screenshot Gallery
-            _buildScreenshotGallery(),
-          ],
-        ),
+                          // Stats Grid
+                          _buildStatsGrid(),
+                          const SizedBox(height: 24),
+
+                          // Control Button
+                          _buildControlButton(),
+                          const SizedBox(height: 32),
+
+                          // Screenshot Gallery
+                          _buildScreenshotGallery(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -164,49 +234,62 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isRecording
-                ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
-                : [const Color(0xFF3B82F6), const Color(0xFF2563EB)],
-          ),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: isRecording
-                  ? Colors.red.withOpacity(0.3)
-                  : Colors.blue.withOpacity(0.3),
+                  ? Colors.red.withOpacity(0.1)
+                  : Colors.blue.withOpacity(0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
           ],
+          border: Border.all(
+            color: isRecording
+                ? Colors.red.withOpacity(0.2)
+                : Colors.blue.withOpacity(0.2),
+            width: 1,
+          ),
         ),
         child: Column(
           children: [
-            Icon(
-              isRecording ? Icons.shield : Icons.shield_outlined,
-              size: 64,
-              color: Colors.white,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isRecording
+                    ? const Color(0xFFFEF2F2)
+                    : const Color(0xFFEFF6FF),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isRecording ? Icons.security : Icons.security_update_warning,
+                size: 40,
+                color: isRecording
+                    ? const Color(0xFFEF4444)
+                    : const Color(0xFF3B82F6),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
-              isRecording ? '🔴 PROTECTION ACTIVE' : '⏸️ PROTECTION PAUSED',
+              isRecording ? 'PROTEKSI AKTIF' : 'PROTEKSI NON-AKTIF',
               style: GoogleFonts.outfit(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1.2,
+                color: const Color(0xFF1E293B),
+                letterSpacing: 0.5,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               isRecording
-                  ? 'Monitoring setiap 5 detik'
-                  : 'Tekan tombol untuk mulai',
+                  ? 'Sistem sedang memantau aktivitas layar secara real-time.'
+                  : 'Aktifkan untuk mulai memantau aktivitas anak.',
+              textAlign: TextAlign.center,
               style: GoogleFonts.raleway(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
+                color: const Color(0xFF64748B),
+                height: 1.5,
               ),
             ),
           ],
@@ -221,21 +304,25 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
         children: [
           Expanded(
             child: _buildStatCard(
-              icon: Icons.camera_alt,
+              icon: Icons.camera_alt_outlined,
               label: 'Screenshots',
               value: '${_screenshotService.screenshotCount.value}',
               color: const Color(0xFF8B5CF6),
+              bgColor: const Color(0xFFF5F3FF),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: _buildStatCard(
-              icon: Icons.apps,
-              label: 'Current App',
-              value: _screenshotService.currentApp.value.length > 8
-                  ? '${_screenshotService.currentApp.value.substring(0, 8)}...'
+              icon: Icons.grid_view_rounded,
+              label: 'Aplikasi Aktif',
+              value: _screenshotService.currentApp.value.isEmpty
+                  ? 'None'
+                  : _screenshotService.currentApp.value.length > 8
+                  ? '${_screenshotService.currentApp.value.substring(0, 8)}..'
                   : _screenshotService.currentApp.value,
               color: const Color(0xFF10B981),
+              bgColor: const Color(0xFFECFDF5),
             ),
           ),
         ],
@@ -248,40 +335,50 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
     required String label,
     required String value,
     required Color color,
+    required Color bgColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 16),
           Text(
             value,
             style: GoogleFonts.outfit(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1E293B),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.raleway(
-              fontSize: 12,
-              color: const Color(0xFF64748B),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF94A3B8),
             ),
           ),
         ],
@@ -302,20 +399,20 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
         },
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isRecording
                   ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
-                  : [const Color(0xFF10B981), const Color(0xFF059669)],
+                  : [const Color(0xFF3B82F6), const Color(0xFF2563EB)],
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: isRecording
-                    ? Colors.red.withOpacity(0.4)
-                    : Colors.green.withOpacity(0.4),
-                blurRadius: 15,
+                    ? const Color(0xFFEF4444).withOpacity(0.4)
+                    : const Color(0xFF3B82F6).withOpacity(0.4),
+                blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
             ],
@@ -324,18 +421,20 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                isRecording ? Icons.stop_circle : Icons.play_circle_filled,
+                isRecording
+                    ? Icons.pause_circle_outline
+                    : Icons.play_circle_outline,
                 color: Colors.white,
                 size: 28,
               ),
               const SizedBox(width: 12),
               Text(
-                isRecording ? 'STOP MONITORING' : 'START MONITORING',
+                isRecording ? 'HENTIKAN MONITORING' : 'MULAI MONITORING',
                 style: GoogleFonts.outfit(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
-                  letterSpacing: 1.2,
+                  letterSpacing: 1,
                 ),
               ),
             ],
@@ -358,7 +457,7 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Screenshot History',
+                'Riwayat Tangkapan Layar',
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -371,18 +470,15 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.1),
+                  color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF3B82F6).withOpacity(0.3),
-                  ),
                 ),
                 child: Text(
-                  '${_screenshotService.screenshots.length}',
+                  '${_screenshotService.screenshots.length} Item',
                   style: GoogleFonts.outfit(
                     color: const Color(0xFF3B82F6),
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -394,9 +490,9 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.75,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.7,
             ),
             itemCount: _screenshotService.screenshots.length,
             reverse: true,
@@ -410,70 +506,54 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
                 onTap: () => _showFullscreenImage(screenshot),
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.grey.withOpacity(0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.memory(imageBytes, fit: BoxFit.cover),
-                        // Gradient Overlay
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.7),
-                              ],
-                            ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
                           ),
+                          child: Image.memory(imageBytes, fit: BoxFit.cover),
                         ),
-                        // Info
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  screenshot['app_name'],
-                                  style: GoogleFonts.outfit(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${screenshot['timestamp'].toString().substring(11, 19)}',
-                                  style: GoogleFonts.raleway(
-                                    color: Colors.white70,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              screenshot['app_name'],
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFF1E293B),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${screenshot['timestamp'].toString().substring(11, 19)}',
+                              style: GoogleFonts.raleway(
+                                color: const Color(0xFF94A3B8),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -486,27 +566,39 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
 
   Widget _buildEmptyGallery() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Column(
         children: [
-          Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey[400]),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.image_not_supported_outlined,
+              size: 40,
+              color: Color(0xFF94A3B8),
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
-            'Belum ada screenshot',
+            'Belum ada data',
             style: GoogleFonts.outfit(
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
               color: const Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Mulai monitoring untuk melihat tangkapan layar',
+            'Tangkapan layar akan muncul di sini saat monitoring aktif.',
             style: GoogleFonts.raleway(
               fontSize: 13,
               color: const Color(0xFF94A3B8),
@@ -523,7 +615,7 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
       context: context,
       builder: (_) => Dialog(
         insetPadding: const EdgeInsets.all(0),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.black.withOpacity(0.9),
         child: Stack(
           children: [
             InteractiveViewer(
@@ -533,7 +625,11 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
               top: 40,
               right: 20,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
