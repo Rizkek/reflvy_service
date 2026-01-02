@@ -8,21 +8,15 @@ class AiChatbotScreen extends StatefulWidget {
   State<AiChatbotScreen> createState() => _AiChatbotScreenState();
 }
 
-class _AiChatbotScreenState extends State<AiChatbotScreen>
-    with SingleTickerProviderStateMixin {
+class _AiChatbotScreenState extends State<AiChatbotScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
-  late AnimationController _glowController;
 
   @override
   void initState() {
     super.initState();
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
 
     // Welcome message
     _messages.add(
@@ -39,7 +33,6 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    _glowController.dispose();
     super.dispose();
   }
 
@@ -110,147 +103,70 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0F0F23), Color(0xFF1A1A2E), Color(0xFF16213E)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(child: _buildMessagesArea()),
-              _buildInputArea(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return AnimatedBuilder(
-      animation: _glowController,
-      builder: (context, child) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
+      backgroundColor: const Color(0xFFF7F7F7),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.smart_toy,
+                color: Color(0xFF6366F1),
+                size: 24,
               ),
             ),
-          ),
-          child: Row(
-            children: [
-              // AI Avatar with glow effect
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(
-                        0xFF8B5CF6,
-                      ).withOpacity(0.5 + _glowController.value * 0.5),
-                      const Color(
-                        0xFF6366F1,
-                      ).withOpacity(0.5 + _glowController.value * 0.5),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AIra Assistant',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.greenAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Online',
+                        style: GoogleFonts.raleway(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(
-                        0xFF8B5CF6,
-                      ).withOpacity(_glowController.value * 0.6),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                  child: const Icon(
-                    Icons.smart_toy,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'AIra Assistant',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF10B981), Color(0xFF059669)],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Online',
-                                style: GoogleFonts.raleway(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      'Powered by Advanced AI',
-                      style: GoogleFonts.raleway(
-                        color: Colors.white60,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF3B82F6),
+        elevation: 0,
+        automaticallyImplyLeading: false,
+      ),
+      body: Column(
+        children: [
+          Expanded(child: _buildMessagesArea()),
+          _buildInputArea(),
+        ],
+      ),
     );
   }
 
@@ -295,12 +211,7 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                gradient: message.isUser
-                    ? const LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                      )
-                    : null,
-                color: message.isUser ? null : Colors.white.withOpacity(0.08),
+                color: message.isUser ? const Color(0xFF3B82F6) : Colors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -310,13 +221,13 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
                 border: Border.all(
                   color: message.isUser
                       ? Colors.transparent
-                      : Colors.white.withOpacity(0.1),
+                      : const Color(0xFFE2E8F0),
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: message.isUser
-                        ? const Color(0xFF6366F1).withOpacity(0.3)
-                        : Colors.black.withOpacity(0.2),
+                        ? const Color(0xFF3B82F6).withOpacity(0.3)
+                        : Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -328,7 +239,9 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
                   Text(
                     message.text,
                     style: GoogleFonts.raleway(
-                      color: Colors.white,
+                      color: message.isUser
+                          ? Colors.white
+                          : const Color(0xFF1E293B),
                       fontSize: 15,
                       height: 1.5,
                     ),
@@ -337,7 +250,9 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
                   Text(
                     '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
                     style: GoogleFonts.raleway(
-                      color: Colors.white60,
+                      color: message.isUser
+                          ? Colors.white70
+                          : const Color(0xFF94A3B8),
                       fontSize: 11,
                     ),
                   ),
@@ -350,10 +265,14 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: const Color(0xFF3B82F6).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.person, color: Colors.white, size: 20),
+              child: const Icon(
+                Icons.person,
+                color: Color(0xFF3B82F6),
+                size: 20,
+              ),
             ),
           ],
         ],
@@ -380,9 +299,9 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -401,42 +320,21 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
 
   Widget _buildTypingDot(int delay) {
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
+      key: ValueKey(DateTime.now().millisecondsSinceEpoch + delay),
+      tween: Tween(begin: 0.3, end: 1.0),
       duration: const Duration(milliseconds: 600),
-      builder: (context, value, child) {
-        return FutureBuilder(
-          future: Future.delayed(Duration(milliseconds: delay)),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.white38,
-                  shape: BoxShape.circle,
-                ),
-              );
-            }
-            return TweenAnimationBuilder<double>(
-              key: ValueKey(DateTime.now()),
-              tween: Tween(begin: 0.3, end: 1.0),
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeInOut,
-              onEnd: () {
-                if (mounted) setState(() {});
-              },
-              builder: (context, opacity, child) {
-                return Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(opacity),
-                    shape: BoxShape.circle,
-                  ),
-                );
-              },
-            );
-          },
+      curve: Curves.easeInOut,
+      onEnd: () {
+        if (mounted) setState(() {});
+      },
+      builder: (context, opacity, child) {
+        return Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: const Color(0xFF94A3B8).withOpacity(opacity),
+            shape: BoxShape.circle,
+          ),
         );
       },
     );
@@ -446,22 +344,23 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
-        ),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Row(
                 children: [
@@ -470,13 +369,13 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
                     child: TextField(
                       controller: _messageController,
                       style: GoogleFonts.raleway(
-                        color: Colors.white,
+                        color: const Color(0xFF1E293B),
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Ketik pesan...',
                         hintStyle: GoogleFonts.raleway(
-                          color: Colors.white38,
+                          color: const Color(0xFF94A3B8),
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -501,8 +400,8 @@ class _AiChatbotScreenState extends State<AiChatbotScreen>
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.5),
-                    blurRadius: 15,
+                    color: const Color(0xFF6366F1).withOpacity(0.3),
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],

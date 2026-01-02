@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'screens/dashboard/dashboard_page.dart';
 import 'screens/dashboard/parent_dashboard_page.dart';
 import 'screens/profile/profile_page.dart';
+import 'screens/profile/parent_profile_page.dart';
 import 'screens/monitoring/monitoring_screen.dart';
 import 'screens/chatbot/ai_chatbot_screen.dart';
 import '../services/monitoring/auto_screenshot_service.dart';
@@ -64,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const ParentDashboardPage(),
         // Monitoring screen for parents to see child's activity
         const MonitoringScreen(),
-        const ProfilePage(),
+        const ParentProfilePage(),
       ];
       _navItems = const [
         BottomNavigationBarItem(

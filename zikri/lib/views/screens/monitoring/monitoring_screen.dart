@@ -12,27 +12,19 @@ class MonitoringScreen extends StatefulWidget {
   State<MonitoringScreen> createState() => _MonitoringScreenState();
 }
 
-class _MonitoringScreenState extends State<MonitoringScreen>
-    with SingleTickerProviderStateMixin {
-  final AutoScreenshotService _screenshotService =
-      Get.find<AutoScreenshotService>();
+class _MonitoringScreenState extends State<MonitoringScreen> {
+  late AutoScreenshotService _screenshotService;
   final AppDetectionService _appDetectionService = AppDetectionService();
-  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+    // Ensure service is registered
+    if (!Get.isRegistered<AutoScreenshotService>()) {
+      Get.put(AutoScreenshotService());
+    }
+    _screenshotService = Get.find<AutoScreenshotService>();
     _checkPermissions();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> _checkPermissions() async {
@@ -68,7 +60,7 @@ class _MonitoringScreenState extends State<MonitoringScreen>
           ],
         ),
         content: Text(
-          'Aplikasi memerlukan izin "Display over other apps" untuk menampilkan alert NSFW di atas aplikasi yang sedang dibuka.',
+          'Aplikasi memerlukan izin "Display over other apps" untuk menampilkan alert NSFW.',
           style: GoogleFonts.raleway(fontSize: 14),
         ),
         actions: [
@@ -128,200 +120,99 @@ class _MonitoringScreenState extends State<MonitoringScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1E1E2E), Color(0xFF2D2D44), Color(0xFF1A1A2E)],
+      backgroundColor: const Color(0xFFF7F7F7),
+      appBar: AppBar(
+        title: Text(
+          'Paradise Monitor',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              _buildHeader(),
-
-              // Main Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Status Card
-                      _buildStatusCard(),
-                      const SizedBox(height: 20),
-
-                      // Stats Grid
-                      _buildStatsGrid(),
-                      const SizedBox(height: 20),
-
-                      // Control Button
-                      _buildControlButton(),
-                      const SizedBox(height: 24),
-
-                      // Screenshot Gallery
-                      _buildScreenshotGallery(),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        backgroundColor: const Color(0xFF3B82F6),
+        elevation: 0,
+        automaticallyImplyLeading: false,
       ),
-    );
-  }
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Status Card
+            _buildStatusCard(),
+            const SizedBox(height: 20),
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Paradise Monitor',
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'Real-time Protection',
-                style: GoogleFonts.raleway(color: Colors.white70, fontSize: 14),
-              ),
-            ],
-          ),
-          Obx(
-            () => Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _screenshotService.isRecording.value
-                    ? Colors.red.withOpacity(0.2)
-                    : Colors.blue.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _screenshotService.isRecording.value
-                      ? Colors.red
-                      : Colors.blue,
-                  width: 2,
-                ),
-              ),
-              child: Icon(
-                _screenshotService.isRecording.value
-                    ? Icons.fiber_manual_record
-                    : Icons.play_circle_outline,
-                color: _screenshotService.isRecording.value
-                    ? Colors.red
-                    : Colors.blue,
-                size: 28,
-              ),
-            ),
-          ),
-        ],
+            // Stats Grid
+            _buildStatsGrid(),
+            const SizedBox(height: 20),
+
+            // Control Button
+            _buildControlButton(),
+            const SizedBox(height: 24),
+
+            // Screenshot Gallery
+            _buildScreenshotGallery(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStatusCard() {
-    return Obx(
-      () => AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: _screenshotService.isRecording.value
-                    ? [
-                        const Color(0xFFEF4444).withOpacity(0.3),
-                        const Color(0xFFDC2626).withOpacity(0.2),
-                      ]
-                    : [
-                        const Color(0xFF6366F1).withOpacity(0.3),
-                        const Color(0xFF4F46E5).withOpacity(0.2),
-                      ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _screenshotService.isRecording.value
-                      ? Colors.red.withOpacity(0.3)
-                      : Colors.blue.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
+    return Obx(() {
+      final isRecording = _screenshotService.isRecording.value;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isRecording
+                ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+                : [const Color(0xFF3B82F6), const Color(0xFF2563EB)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: isRecording
+                  ? Colors.red.withOpacity(0.3)
+                  : Colors.blue.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
-            child: Column(
-              children: [
-                // Pulsing Icon
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _screenshotService.isRecording.value
-                            ? Colors.red.withOpacity(
-                                0.5 + (_animationController.value * 0.5),
-                              )
-                            : Colors.blue.withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: _screenshotService.isRecording.value
-                            ? _animationController.value * 10
-                            : 0,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    _screenshotService.isRecording.value
-                        ? Icons.shield
-                        : Icons.shield_outlined,
-                    size: 48,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _screenshotService.isRecording.value
-                      ? '🔴 PROTECTION ACTIVE'
-                      : '⏸️ PROTECTION PAUSED',
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _screenshotService.isRecording.value
-                      ? 'Monitoring setiap 5 detik'
-                      : 'Tekan tombol untuk mulai',
-                  style: GoogleFonts.raleway(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              isRecording ? Icons.shield : Icons.shield_outlined,
+              size: 64,
+              color: Colors.white,
             ),
-          );
-        },
-      ),
-    );
+            const SizedBox(height: 16),
+            Text(
+              isRecording ? '🔴 PROTECTION ACTIVE' : '⏸️ PROTECTION PAUSED',
+              style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isRecording
+                  ? 'Monitoring setiap 5 detik'
+                  : 'Tekan tombol untuk mulai',
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.9),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildStatsGrid() {
@@ -361,9 +252,16 @@ class _MonitoringScreenState extends State<MonitoringScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -374,14 +272,17 @@ class _MonitoringScreenState extends State<MonitoringScreen>
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: const Color(0xFF1E293B),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           Text(
             label,
-            style: GoogleFonts.raleway(fontSize: 12, color: Colors.white70),
+            style: GoogleFonts.raleway(
+              fontSize: 12,
+              color: const Color(0xFF64748B),
+            ),
           ),
         ],
       ),
@@ -389,10 +290,11 @@ class _MonitoringScreenState extends State<MonitoringScreen>
   }
 
   Widget _buildControlButton() {
-    return Obx(
-      () => GestureDetector(
+    return Obx(() {
+      final isRecording = _screenshotService.isRecording.value;
+      return GestureDetector(
         onTap: () {
-          if (_screenshotService.isRecording.value) {
+          if (isRecording) {
             _screenshotService.stopAutoScreenshot();
           } else {
             _screenshotService.startAutoScreenshot();
@@ -403,14 +305,14 @@ class _MonitoringScreenState extends State<MonitoringScreen>
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: _screenshotService.isRecording.value
+              colors: isRecording
                   ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
                   : [const Color(0xFF10B981), const Color(0xFF059669)],
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: _screenshotService.isRecording.value
+                color: isRecording
                     ? Colors.red.withOpacity(0.4)
                     : Colors.green.withOpacity(0.4),
                 blurRadius: 15,
@@ -422,17 +324,13 @@ class _MonitoringScreenState extends State<MonitoringScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                _screenshotService.isRecording.value
-                    ? Icons.stop_circle
-                    : Icons.play_circle_filled,
+                isRecording ? Icons.stop_circle : Icons.play_circle_filled,
                 color: Colors.white,
                 size: 28,
               ),
               const SizedBox(width: 12),
               Text(
-                _screenshotService.isRecording.value
-                    ? 'STOP MONITORING'
-                    : 'START MONITORING',
+                isRecording ? 'STOP MONITORING' : 'START MONITORING',
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -443,8 +341,8 @@ class _MonitoringScreenState extends State<MonitoringScreen>
             ],
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildScreenshotGallery() {
@@ -464,7 +362,7 @@ class _MonitoringScreenState extends State<MonitoringScreen>
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: const Color(0xFF1E293B),
                 ),
               ),
               Container(
@@ -473,16 +371,16 @@ class _MonitoringScreenState extends State<MonitoringScreen>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.2),
+                  color: const Color(0xFF3B82F6).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF6366F1).withOpacity(0.5),
+                    color: const Color(0xFF3B82F6).withOpacity(0.3),
                   ),
                 ),
                 child: Text(
                   '${_screenshotService.screenshots.length}',
                   style: GoogleFonts.outfit(
-                    color: const Color(0xFF6366F1),
+                    color: const Color(0xFF3B82F6),
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -513,7 +411,14 @@ class _MonitoringScreenState extends State<MonitoringScreen>
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
@@ -529,7 +434,7 @@ class _MonitoringScreenState extends State<MonitoringScreen>
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.8),
+                                Colors.black.withOpacity(0.7),
                               ],
                             ),
                           ),
@@ -583,30 +488,29 @@ class _MonitoringScreenState extends State<MonitoringScreen>
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.photo_library_outlined,
-            size: 64,
-            color: Colors.white.withOpacity(0.3),
-          ),
+          Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'Belum ada screenshot',
             style: GoogleFonts.outfit(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.white70,
+              color: const Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Mulai monitoring untuk melihat tangkapan layar',
-            style: GoogleFonts.raleway(fontSize: 13, color: Colors.white38),
+            style: GoogleFonts.raleway(
+              fontSize: 13,
+              color: const Color(0xFF94A3B8),
+            ),
             textAlign: TextAlign.center,
           ),
         ],
