@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../services/statistic/statistics_service.dart';
 
 class HistoryDetailScreen extends StatefulWidget {
   final String title;
@@ -13,7 +12,7 @@ class HistoryDetailScreen extends StatefulWidget {
   State<HistoryDetailScreen> createState() => _HistoryDetailScreenState();
 }
 
-class _HistoryDetailScreenState extends State<HistoryDetailScreen> 
+class _HistoryDetailScreenState extends State<HistoryDetailScreen>
     with AutomaticKeepAliveClientMixin {
   // State for "apps" (today) loaded from SharedPreferences
   List<Map<String, dynamic>> _todayAppItems = [];
@@ -61,7 +60,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -87,7 +86,8 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
       future: _ensureWeeklyLoaded(),
       builder: (context, snapshot) {
         // Show loading only on first load
-        if (snapshot.connectionState == ConnectionState.waiting && !_weeklyLoaded) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !_weeklyLoaded) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(32.0),
@@ -104,7 +104,11 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.shade300,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Gagal memuat data',
@@ -130,7 +134,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
         }
 
         final weeklyData = _weeklyHistory.isNotEmpty ? _weeklyHistory : [];
-        
+
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -172,8 +176,12 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
                             weeklyData.isEmpty
                                 ? '0'
                                 : weeklyData
-                                    .fold<int>(0, (sum, day) => sum + ((day['total'] ?? 0) as int))
-                                    .toString(),
+                                      .fold<int>(
+                                        0,
+                                        (sum, day) =>
+                                            sum + ((day['total'] ?? 0) as int),
+                                      )
+                                      .toString(),
                             Icons.search,
                             const Color(0xFF3B82F6),
                           ),
@@ -376,94 +384,99 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
           ],
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${day['day']}, ${day['date']}',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${day['day']}, ${day['date']}',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1E293B),
+                      ),
                     ),
-                  ),
-                  Text(
-                    '${day['total']} deteksi total',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: const Color(0xFF64748B),
+                    Text(
+                      '${day['total']} deteksi total',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: const Color(0xFF64748B),
+                      ),
                     ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: day['total'] > 4
-                      ? const Color(0xFFEF4444).withOpacity(0.1)
-                      : day['total'] > 2
-                      ? const Color(0xFFF59E0B).withOpacity(0.1)
-                      : const Color.fromARGB(255, 255, 230, 0).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  day['total'] > 4
-                      ? 'Tinggi'
-                      : day['total'] > 2
-                      ? 'Sedang'
-                      : 'Rendah',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  decoration: BoxDecoration(
                     color: day['total'] > 4
-                        ? const Color(0xFFEF4444)
+                        ? const Color(0xFFEF4444).withOpacity(0.1)
                         : day['total'] > 2
-                        ? const Color(0xFFF59E0B)
-                        : const Color.fromARGB(255, 255, 230, 0),
+                        ? const Color(0xFFF59E0B).withOpacity(0.1)
+                        : const Color.fromARGB(
+                            255,
+                            255,
+                            230,
+                            0,
+                          ).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    day['total'] > 4
+                        ? 'Tinggi'
+                        : day['total'] > 2
+                        ? 'Sedang'
+                        : 'Rendah',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: day['total'] > 4
+                          ? const Color(0xFFEF4444)
+                          : day['total'] > 2
+                          ? const Color(0xFFF59E0B)
+                          : const Color.fromARGB(255, 255, 230, 0),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildThreatCount(
-                  'Ringan',
-                  day['low'],
-                  const Color.fromARGB(255, 255, 230, 0),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildThreatCount(
+                    'Ringan',
+                    day['low'],
+                    const Color.fromARGB(255, 255, 230, 0),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildThreatCount(
-                  'Sedang',
-                  day['medium'],
-                  const Color(0xFFF59E0B),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildThreatCount(
+                    'Sedang',
+                    day['medium'],
+                    const Color(0xFFF59E0B),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildThreatCount(
-                  'Tinggi',
-                  day['high'],
-                  const Color(0xFFEF4444),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildThreatCount(
+                    'Tinggi',
+                    day['high'],
+                    const Color(0xFFEF4444),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -521,7 +534,10 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
             highlightColor: Colors.grey.shade50,
           ),
           child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
             childrenPadding: EdgeInsets.zero,
             expandedCrossAxisAlignment: CrossAxisAlignment.start,
             expandedAlignment: Alignment.centerLeft,
@@ -532,7 +548,11 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
                 color: (app['color'] as Color).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(app['icon'] as IconData, color: app['color'] as Color, size: 20),
+              child: Icon(
+                app['icon'] as IconData,
+                color: app['color'] as Color,
+                size: 20,
+              ),
             ),
             title: Text(
               app['name'] as String,
@@ -566,11 +586,29 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _buildThreatCount('Low', app['low'] as int, const Color.fromARGB(255, 255, 230, 0))),
+                        Expanded(
+                          child: _buildThreatCount(
+                            'Low',
+                            app['low'] as int,
+                            const Color.fromARGB(255, 255, 230, 0),
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildThreatCount('Medium', app['medium'] as int, const Color(0xFFF59E0B))),
+                        Expanded(
+                          child: _buildThreatCount(
+                            'Medium',
+                            app['medium'] as int,
+                            const Color(0xFFF59E0B),
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildThreatCount('High', app['high'] as int, const Color(0xFFEF4444))),
+                        Expanded(
+                          child: _buildThreatCount(
+                            'High',
+                            app['high'] as int,
+                            const Color(0xFFEF4444),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -585,131 +623,169 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
 
   Future<Map<String, dynamic>?> _ensureTodayAppsLoaded() async {
     if (_todayAppItems.isNotEmpty) return {};
-    final cached = await StatisticsService.getCachedToday();
-    Map<String, dynamic>? source = cached;
-    source ??= await StatisticsService.getToday();
-    if (!mounted) return source;
-    final List<Map<String, dynamic>> items = [];
-    String worstName = '-';
-    int totalApps = 0;
-    if (source != null) {
-      final stats = source['statistics'] as Map<String, dynamic>?;
-      final appBreakdown = (stats?['appBreakdown'] as Map?)?.cast<String, dynamic>();
-      if (appBreakdown != null && appBreakdown.isNotEmpty) {
-        for (final entry in appBreakdown.entries) {
-          final name = entry.key;
-          final val = (entry.value as Map).cast<String, dynamic>();
-          final total = (val['Total'] ?? 0) as int;
-          if (total <= 0) continue;
-          final low = (val['Low'] ?? 0) as int;
-          final med = (val['Medium'] ?? 0) as int;
-          final high = (val['High'] ?? 0) as int;
-          final iconAndColor = _iconAndColorForApp(name);
-          items.add({
-            'name': _capitalize(name),
-            'total': total,
-            'low': low,
-            'medium': med,
-            'high': high,
-            'icon': iconAndColor['icon'] as IconData,
-            'color': iconAndColor['color'] as Color,
-          });
-        }
-        // Sort items by total desc for listing
-        items.sort((a, b) => (b['total'] as int).compareTo(a['total'] as int));
-        totalApps = items.length;
-        if (items.isNotEmpty) {
-          final worst = List<Map<String, dynamic>>.from(items)
-            ..sort((a, b) {
-              final hb = b['high'] as int;
-              final ha = a['high'] as int;
-              if (hb != ha) return hb.compareTo(ha);
-              final mb = b['medium'] as int;
-              final ma = a['medium'] as int;
-              if (mb != ma) return mb.compareTo(ma);
-              return (b['total'] as int).compareTo(a['total'] as int);
-            });
-          worstName = worst.first['name'] as String;
-        }
-      }
-    }
+
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted) return null;
+
+    // DUMMY DATA - Aplikasi terdeteksi hari ini
+    final List<Map<String, dynamic>> items = [
+      {
+        'name': 'Instagram',
+        'total': 15,
+        'low': 8,
+        'medium': 5,
+        'high': 2,
+        'icon': Icons.camera_alt,
+        'color': const Color(0xFF8B5CF6),
+      },
+      {
+        'name': 'TikTok',
+        'total': 12,
+        'low': 6,
+        'medium': 4,
+        'high': 2,
+        'icon': Icons.music_note,
+        'color': const Color(0xFF111827),
+      },
+      {
+        'name': 'YouTube',
+        'total': 8,
+        'low': 5,
+        'medium': 2,
+        'high': 1,
+        'icon': Icons.play_arrow,
+        'color': const Color(0xFFDC2626),
+      },
+      {
+        'name': 'Chrome',
+        'total': 5,
+        'low': 3,
+        'medium': 2,
+        'high': 0,
+        'icon': Icons.apps,
+        'color': const Color(0xFF3B82F6),
+      },
+    ];
+
+    String worstName = 'Instagram'; // App dengan high terbanyak
+    int totalApps = items.length;
+
     setState(() {
       _todayAppItems = items;
       _todayTotalApps = totalApps;
       _todayWorstApp = worstName;
     });
-    return source;
+
+    print('Today apps loaded with DUMMY DATA: $totalApps apps');
+    return {};
   }
 
   Future<Map<String, dynamic>?> _ensureWeeklyLoaded() async {
     try {
       if (_weeklyLoaded && _weeklyHistory.isNotEmpty) return {};
-      
-      // First try to get from secure storage
-      final secureData = await StatisticsService.getDailyBreakdown();
-      if (secureData != null && secureData.isNotEmpty) {
-        print('Loading weekly data from secure storage: ${secureData.length} days');
-        _parseAndSetWeeklyData(secureData);
-        if (mounted) {
-          setState(() {
-            _weeklyLoaded = true;
-          });
-        }
-      }
-      
-      // Then fetch from API (will update secure storage)
-      final cached = await StatisticsService.getCached7Days();
-      Map<String, dynamic>? source = cached;
-      source ??= await StatisticsService.get7Days();
-      
-      if (!mounted) return source;
-      
-      if (source != null) {
-        final stats = source['statistics'] as Map<String, dynamic>?;
-        final dailyBreakdown = (stats?['dailyBreakdown'] as List?)?.cast<Map<String, dynamic>>();
-        
-        if (dailyBreakdown != null && dailyBreakdown.isNotEmpty) {
-          print('Loading weekly data from API: ${dailyBreakdown.length} days');
-          _parseAndSetWeeklyData(dailyBreakdown);
-        }
-      }
-      
-      if (mounted) {
-        setState(() {
-          _weeklyLoaded = true;
-        });
-      }
-      
-      return source;
+
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return null;
+
+      // DUMMY DATA - Trend 7 hari terakhir
+      final List<Map<String, dynamic>> items = [
+        {
+          'day': 'Min',
+          'date': '29 Des',
+          'total': 45,
+          'low': 30,
+          'medium': 10,
+          'high': 5,
+        },
+        {
+          'day': 'Sen',
+          'date': '30 Des',
+          'total': 38,
+          'low': 28,
+          'medium': 8,
+          'high': 2,
+        },
+        {
+          'day': 'Sel',
+          'date': '31 Des',
+          'total': 50,
+          'low': 30,
+          'medium': 12,
+          'high': 8,
+        },
+        {
+          'day': 'Rab',
+          'date': '1 Jan',
+          'total': 25,
+          'low': 20,
+          'medium': 4,
+          'high': 1,
+        },
+        {
+          'day': 'Kam',
+          'date': '2 Jan',
+          'total': 60,
+          'low': 35,
+          'medium': 15,
+          'high': 10,
+        },
+        {
+          'day': 'Jum',
+          'date': '3 Jan',
+          'total': 30,
+          'low': 20,
+          'medium': 7,
+          'high': 3,
+        },
+        {
+          'day': 'Sab',
+          'date': 'Hari Ini',
+          'total': 40,
+          'low': 25,
+          'medium': 11,
+          'high': 4,
+        },
+      ];
+
+      setState(() {
+        _weeklyHistory = items;
+        _weeklyLoaded = true;
+      });
+
+      print('Weekly data loaded with DUMMY DATA: ${items.length} days');
+      return {};
     } catch (e) {
-      // Log error but mark as loaded to prevent infinite loading
-      print('Error loading weekly data: $e');
+      print('Error loading weekly dummy data: $e');
       if (mounted) {
         setState(() {
           _weeklyLoaded = true;
         });
       }
-      rethrow; // Rethrow to let FutureBuilder handle it
+      return {};
     }
   }
 
   void _parseAndSetWeeklyData(List<Map<String, dynamic>> dailyBreakdown) {
     final List<Map<String, dynamic>> items = [];
-    
+
     for (final dayData in dailyBreakdown) {
       final dateStr = dayData['date'] as String?;
       if (dateStr == null) continue;
-      
+
       // Parse date format from API (e.g., "October 28, 2025")
       final dt = _parseDate(dateStr);
       final dayName = _getDayName(dt.weekday);
       final dateFormatted = '${dt.day} ${_getMonthShort(dt.month)}';
-      
+
       final low = (dayData['totalLow'] ?? 0) as int;
       final medium = (dayData['totalMedium'] ?? 0) as int;
       final high = (dayData['totalHigh'] ?? 0) as int;
       final total = (dayData['grandTotal'] ?? 0) as int;
-      
+
       items.add({
         'day': dayName,
         'total': total,
@@ -719,7 +795,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
         'date': dateFormatted,
       });
     }
-    
+
     _weeklyHistory = items;
     print('Parsed ${items.length} days of weekly data');
   }
@@ -729,20 +805,29 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
       // Handle format: "September 27, 2025"
       final parts = dateStr.split(',');
       if (parts.length < 2) return DateTime.now();
-      
+
       final year = int.tryParse(parts[1].trim()) ?? DateTime.now().year;
       final monthDay = parts[0].trim().split(' ');
       if (monthDay.length < 2) return DateTime.now();
-      
+
       final monthName = monthDay[0].toLowerCase();
       final day = int.tryParse(monthDay[1]) ?? 1;
-      
+
       const months = {
-        'january': 1, 'february': 2, 'march': 3, 'april': 4,
-        'may': 5, 'june': 6, 'july': 7, 'august': 8,
-        'september': 9, 'october': 10, 'november': 11, 'december': 12
+        'january': 1,
+        'february': 2,
+        'march': 3,
+        'april': 4,
+        'may': 5,
+        'june': 6,
+        'july': 7,
+        'august': 8,
+        'september': 9,
+        'october': 10,
+        'november': 11,
+        'december': 12,
       };
-      
+
       final month = months[monthName] ?? 1;
       return DateTime(year, month, day);
     } catch (_) {
@@ -757,17 +842,30 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
   }
 
   String _getMonthShort(int month) {
-    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 
-                    'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    const months = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Ags',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
     return months[month];
   }
 
   String _getWorstDay(List<dynamic> weeklyData) {
     if (weeklyData.isEmpty) return '-';
-    
+
     Map<String, dynamic> worst = weeklyData.first as Map<String, dynamic>;
     int maxTotal = (worst['total'] as int?) ?? 0;
-    
+
     for (final day in weeklyData) {
       final dayMap = day as Map<String, dynamic>;
       final total = (dayMap['total'] as int?) ?? 0;
@@ -776,17 +874,22 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
         worst = dayMap;
       }
     }
-    
+
     return worst['day'] as String? ?? '-';
   }
 
   Map<String, dynamic> _iconAndColorForApp(String name) {
     final n = name.toLowerCase();
-    if (n.contains('you')) return {'icon': Icons.play_arrow, 'color': const Color(0xFFDC2626)};
-    if (n.contains('insta')) return {'icon': Icons.camera_alt, 'color': const Color(0xFF8B5CF6)};
-    if (n.contains('face')) return {'icon': Icons.facebook, 'color': const Color(0xFF2563EB)};
-    if (n.contains('twit') || n == 'x') return {'icon': Icons.close, 'color': const Color(0xFF0EA5E9)};
-    if (n.contains('tiktok') || n.contains('tok')) return {'icon': Icons.music_note, 'color': const Color(0xFF111827)};
+    if (n.contains('you'))
+      return {'icon': Icons.play_arrow, 'color': const Color(0xFFDC2626)};
+    if (n.contains('insta'))
+      return {'icon': Icons.camera_alt, 'color': const Color(0xFF8B5CF6)};
+    if (n.contains('face'))
+      return {'icon': Icons.facebook, 'color': const Color(0xFF2563EB)};
+    if (n.contains('twit') || n == 'x')
+      return {'icon': Icons.close, 'color': const Color(0xFF0EA5E9)};
+    if (n.contains('tiktok') || n.contains('tok'))
+      return {'icon': Icons.music_note, 'color': const Color(0xFF111827)};
     return {'icon': Icons.apps, 'color': const Color(0xFF3B82F6)};
   }
 
@@ -914,7 +1017,11 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
                   children: [
-                    Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 64,
+                      color: Colors.grey.shade400,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Belum ada data aktivitas',
@@ -1002,116 +1109,119 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
           ],
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with time and threat level
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    activity['time'],
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    activity['date'],
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getThreatColor(activity['level']),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _getThreatLabel(activity['level']),
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // App info and action
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: activity['color'].withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  activity['icon'],
-                  color: activity['color'],
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with time and threat level
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
                   children: [
                     Text(
-                      activity['appName'],
+                      activity['time'],
                       style: GoogleFonts.inter(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF1E293B),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
-                      activity['action'],
+                      activity['date'],
                       style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: activity['color'],
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Details
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getThreatColor(activity['level']),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _getThreatLabel(activity['level']),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            child: Text(
-              activity['details'],
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: const Color(0xFF64748B),
-                height: 1.4,
+
+            const SizedBox(height: 12),
+
+            // App info and action
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: activity['color'].withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    activity['icon'],
+                    color: activity['color'],
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activity['appName'],
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      Text(
+                        activity['action'],
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: activity['color'],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Details
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                activity['details'],
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                  height: 1.4,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }

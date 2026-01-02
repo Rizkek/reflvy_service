@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../models/user.dart';
+import '../models/login.dart';
+import '../services/storage/secure_storage_service.dart';
 import '../constants/api_constants.dart';
 import '../constants/demo_config.dart';
 import '../services/api/api_service.dart';
@@ -115,7 +117,11 @@ class RegisterController {
     try {
       final response = await _apiClient.post(
         ApiUrls.register,
-        body: {'gender': user.genderInEnglish, 'age': user.age},
+        body: {
+          'gender': user.genderInEnglish,
+          'age': user.age,
+          'role': user.role,
+        },
         requiresAuth: true,
       );
 
@@ -153,6 +159,22 @@ class RegisterController {
         ); // Simulate network delay
 
         _registeredUser = user.copyWith(id: 'demo_user_123');
+
+        // AUTO LOGIN for Demo: Save LoginUser with correct role to storage
+        final loginUser = LoginUser(
+          uid: 'demo_user_123',
+          email: user.email,
+          displayName: user.name,
+          token: 'demo_token_123',
+          refreshToken: 'demo_refresh_token',
+          loginTime: DateTime.now(),
+          isVerified: true,
+          gender: user.gender,
+          age: user.age,
+          role: user.role, // Persist the selected role
+        );
+        await SecureStorageService.saveUserData(loginUser);
+
         _setState(RegisterState.success);
 
         return RegisterResult(
@@ -181,6 +203,21 @@ class RegisterController {
       // Step 3: Create profile via API
       final profileCreated = await _createProfile(token, user);
 
+      // Step 4: Auto Login (Save Session)
+      final loginUser = LoginUser(
+        uid: firebaseUser.uid,
+        email: user.email,
+        displayName: user.name,
+        token: token,
+        refreshToken: firebaseUser.refreshToken,
+        loginTime: DateTime.now(),
+        isVerified: false, // Default for new registration
+        gender: user.gender,
+        age: user.age,
+        role: user.role,
+      );
+      await SecureStorageService.saveUserData(loginUser);
+
       if (profileCreated) {
         _registeredUser = user.copyWith(id: firebaseUser.uid);
         _setState(RegisterState.success);
@@ -199,7 +236,7 @@ class RegisterController {
         return RegisterResult(
           success: true,
           message:
-              'Akun berhasil dibuat, tetapi gagal menyimpan profil. Silakan coba login.',
+              'Akun berhasil dibuat, tetapi gagal menyimpan profil. Anda tetap bisa login.',
           type: RegisterResultType.partialSuccess,
           user: _registeredUser,
         );

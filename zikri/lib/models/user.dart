@@ -6,6 +6,7 @@ class User {
   final String gender;
   final DateTime birthdate;
   final bool acceptTerms;
+  final String role; // 'parent' or 'child'
 
   User({
     this.id,
@@ -15,13 +16,14 @@ class User {
     required this.gender,
     required this.birthdate,
     required this.acceptTerms,
+    this.role = 'child',
   });
 
   // Calculate age from birthdate
   int get age {
     final now = DateTime.now();
     int calculatedAge = now.year - birthdate.year;
-    if (now.month < birthdate.month || 
+    if (now.month < birthdate.month ||
         (now.month == birthdate.month && now.day < birthdate.day)) {
       calculatedAge--;
     }
@@ -90,6 +92,7 @@ class User {
       'gender': genderInEnglish,
       'age': age,
       'acceptTerms': acceptTerms,
+      'role': role,
     };
   }
 
@@ -101,10 +104,11 @@ class User {
       email: json['email'] ?? '',
       password: json['password'] ?? '',
       gender: json['gender'] == 'male' ? 'Laki-laki' : 'Perempuan',
-      birthdate: json['birthdate'] != null 
-          ? DateTime.parse(json['birthdate']) 
+      birthdate: json['birthdate'] != null
+          ? DateTime.parse(json['birthdate'])
           : DateTime.now(),
       acceptTerms: json['acceptTerms'] ?? false,
+      role: json['role'] ?? 'child',
     );
   }
 
@@ -117,6 +121,7 @@ class User {
     String? gender,
     DateTime? birthdate,
     bool? acceptTerms,
+    String? role,
   }) {
     return User(
       id: id ?? this.id,
@@ -126,6 +131,7 @@ class User {
       gender: gender ?? this.gender,
       birthdate: birthdate ?? this.birthdate,
       acceptTerms: acceptTerms ?? this.acceptTerms,
+      role: role ?? this.role,
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
 import '../../../services/storage/secure_storage_service.dart';
+import '../../../controllers/link_controller.dart';
 import '../auth/login_screen.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -29,6 +31,23 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadProfile() async {
+    // Dummy Data for Profile
+    await Future.delayed(const Duration(milliseconds: 500)); // Simulate loading
+    if (!mounted) return;
+
+    setState(() {
+      _name = 'Zikri (Dummy)';
+      _email = 'zikri@example.com';
+      _isVerified = true;
+      _gender = 'Laki-laki';
+      _age = 25;
+      _uid = 'dummy-uid-123456789';
+      _loginTime = DateTime.now();
+      _tokenExpired = false;
+    });
+
+    /* 
+    // Original Code
     final user = await SecureStorageService.getUserData();
     final isExpired = await SecureStorageService.isTokenExpired();
     if (!mounted) return;
@@ -61,6 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
       _tokenExpired = isExpired;
     });
+    */
   }
 
   Future<void> _promptUpdateDisplayName() async {
@@ -127,13 +147,15 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal memverifikasi perubahan nama di Firebase')),
+          const SnackBar(
+            content: Text('Gagal memverifikasi perubahan nama di Firebase'),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memperbarui nama: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memperbarui nama: $e')));
     } finally {
       if (mounted) setState(() => _updatingName = false);
     }
@@ -149,7 +171,6 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +230,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         radius: isSmall ? 22 : 26,
                         backgroundColor: Colors.white,
                         child: Text(
-                          (_name != null && _name!.isNotEmpty) ? _name![0].toUpperCase() : 'U',
+                          (_name != null && _name!.isNotEmpty)
+                              ? _name![0].toUpperCase()
+                              : 'U',
                           style: GoogleFonts.inter(
                             color: const Color(0xFF1F2937),
                             fontSize: isSmall ? 18 : 20,
@@ -237,18 +260,33 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: _isVerified ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.15),
+                                  color: _isVerified
+                                      ? Colors.white.withOpacity(0.2)
+                                      : Colors.white.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(_isVerified ? Icons.verified : Icons.error_outline, size: 14, color: Colors.white),
+                                    Icon(
+                                      _isVerified
+                                          ? Icons.verified
+                                          : Icons.error_outline,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
                                       _isVerified ? 'Verified' : 'Unverified',
-                                      style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -259,7 +297,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           Text(
                             _email ?? '-',
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: isSmall ? 12 : 13),
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: isSmall ? 12 : 13,
+                            ),
                           ),
                         ],
                       ),
@@ -276,7 +317,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: _statChip(
                       icon: Icons.fingerprint,
                       label: 'UID',
-                      value: _uid != null && _uid!.length > 8 ? '${_uid!.substring(0, 4)}...${_uid!.substring(_uid!.length - 4)}' : (_uid ?? '-'),
+                      value: _uid != null && _uid!.length > 8
+                          ? '${_uid!.substring(0, 4)}...${_uid!.substring(_uid!.length - 4)}'
+                          : (_uid ?? '-'),
                       color: const Color(0xFF3B82F6),
                     ),
                   ),
@@ -286,7 +329,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       icon: _tokenExpired ? Icons.lock_clock : Icons.lock_open,
                       label: 'Token',
                       value: _tokenExpired ? 'Expired' : 'Valid',
-                      color: _tokenExpired ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+                      color: _tokenExpired
+                          ? const Color(0xFFEF4444)
+                          : const Color(0xFF10B981),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -294,7 +339,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: _statChip(
                       icon: Icons.schedule,
                       label: 'Login',
-                      value: _loginTime != null ? _formatDate(_loginTime!) : '-',
+                      value: _loginTime != null
+                          ? _formatDate(_loginTime!)
+                          : '-',
                       color: const Color(0xFFF59E0B),
                     ),
                   ),
@@ -307,7 +354,11 @@ class _ProfilePageState extends State<ProfilePage> {
               _sectionCard(
                 title: 'Informasi Pribadi',
                 children: [
-                  _editableInfoRow('Nama', _name ?? '-', onEdit: _updatingName ? null : _promptUpdateDisplayName),
+                  _editableInfoRow(
+                    'Nama',
+                    _name ?? '-',
+                    onEdit: _updatingName ? null : _promptUpdateDisplayName,
+                  ),
                   const SizedBox(height: 10),
                   _infoRow('Email', _email ?? '-'),
                   const SizedBox(height: 10),
@@ -325,13 +376,24 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   _infoRow('UID', _uid ?? '-'),
                   const SizedBox(height: 10),
-                  _infoRow('Status Email', _isVerified ? 'Terverifikasi' : 'Belum Verifikasi'),
+                  _infoRow(
+                    'Status Email',
+                    _isVerified ? 'Terverifikasi' : 'Belum Verifikasi',
+                  ),
                   const SizedBox(height: 10),
                   _infoRow('Token', _tokenExpired ? 'Expired' : 'Valid'),
                   const SizedBox(height: 10),
-                  _infoRow('Login Terakhir', _loginTime != null ? _formatDate(_loginTime!) : '-'),
+                  _infoRow(
+                    'Login Terakhir',
+                    _loginTime != null ? _formatDate(_loginTime!) : '-',
+                  ),
                 ],
               ),
+
+              const SizedBox(height: 12),
+
+              // Link to Parent Section (Child Only)
+              _buildLinkToParentSection(),
 
               const SizedBox(height: 12),
 
@@ -495,7 +557,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _statChip({required IconData icon, required String label, required String value, required Color color}) {
+  Widget _statChip({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
@@ -526,9 +593,23 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: GoogleFonts.inter(color: const Color(0xFF6B7280), fontSize: 11)),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF6B7280),
+                    fontSize: 11,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(value, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(color: const Color(0xFF111827), fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF111827),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
@@ -536,8 +617,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
-  
 
   String _formatDate(DateTime dt) {
     // e.g., 2025-09-27 14:35
@@ -547,5 +626,130 @@ class _ProfilePageState extends State<ProfilePage> {
     final hh = dt.hour.toString().padLeft(2, '0');
     final mm = dt.minute.toString().padLeft(2, '0');
     return '$d/$m/$y $hh:$mm';
+  }
+
+  Widget _buildLinkToParentSection() {
+    final linkController = Get.isRegistered<LinkController>()
+        ? Get.find<LinkController>()
+        : Get.put(LinkController());
+
+    return Obx(
+      () => _sectionCard(
+        title: '🔗 Hubungkan dengan Orang Tua',
+        children: [
+          if (linkController.isLinkedToParent.value)
+            // Already Linked
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Terhubung',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          'Dipantau oleh: ${linkController.parentName.value}',
+                          style: GoogleFonts.raleway(
+                            color: const Color(0xFF64748B),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            // Not Linked - Show Input
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Belum terhubung dengan orang tua',
+                  style: GoogleFonts.raleway(
+                    color: const Color(0xFF64748B),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Masukkan kode (123-456)',
+                    hintStyle: GoogleFonts.raleway(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: 14,
+                    ),
+                    prefixIcon: const Icon(Icons.pin, color: Color(0xFF4A90E2)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF4A90E2),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  maxLength: 7,
+                  onChanged: (value) async {
+                    // Auto-submit when 6 digits entered (with dash = 7 chars)
+                    if (value.replaceAll('-', '').length == 6) {
+                      final code = value.replaceAll('-', '');
+                      final success = await linkController.verifyCode(code);
+                      if (success) {
+                        Get.snackbar(
+                          'Berhasil!',
+                          'Terhubung dengan ${linkController.parentName.value}',
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                        );
+                      } else {
+                        Get.snackbar(
+                          'Gagal',
+                          'Kode tidak valid atau sudah expired',
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Minta kode 6 digit dari orang tua Anda',
+                  style: GoogleFonts.raleway(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
   }
 }

@@ -36,11 +36,7 @@ class LoginCredentials {
 
   // Convert to JSON for API calls if needed
   Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-      'password': password,
-      'rememberMe': rememberMe,
-    };
+    return {'email': email, 'password': password, 'rememberMe': rememberMe};
   }
 
   // Copy with method for immutability
@@ -72,6 +68,7 @@ class LoginUser {
   final bool? isVerified;
   final String? gender;
   final int? age;
+  final String role; // 'parent' or 'child'
 
   LoginUser({
     required this.uid,
@@ -83,6 +80,7 @@ class LoginUser {
     this.isVerified,
     this.gender,
     this.age,
+    this.role = 'child',
   });
 
   // Convert to JSON for storage
@@ -97,6 +95,7 @@ class LoginUser {
       'isVerified': isVerified,
       'gender': gender,
       'age': age,
+      'role': role,
     };
   }
 
@@ -112,11 +111,12 @@ class LoginUser {
       isVerified: json['isVerified'],
       gender: json['gender'],
       age: json['age'],
+      role: json['role'] ?? 'child',
     );
   }
 
   @override
   String toString() {
-    return 'LoginUser(uid: $uid, email: $email, displayName: $displayName, isVerified: $isVerified, gender: $gender, age: $age)';
+    return 'LoginUser(uid: $uid, email: $email, role: $role, displayName: $displayName)';
   }
 }

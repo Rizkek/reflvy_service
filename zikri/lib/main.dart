@@ -50,6 +50,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const SplashScreen(),
+      // home:
+      //     const ParentDashboardPage(), // Mode Test UI: Langsung ke Parent Dashboard
+      // home: const HomeScreen(),
       // initialBinding: BindingsBuilder(() {
       //   Get.put(AuthController());
       // }),
@@ -63,6 +66,21 @@ class MyApp extends StatelessWidget {
           page: () => const ForgotPasswordScreen(),
         ),
         GetPage(name: '/home', page: () => const HomeScreen()),
+
+        // TESTING PORTS
+        GetPage(
+          name: '/parent',
+          page: () => const HomeScreen(initialRole: 'parent'),
+        ),
+        GetPage(
+          name: '/child',
+          page: () => const HomeScreen(initialRole: 'child'),
+        ),
+        GetPage(
+          name: '/user',
+          page: () => const HomeScreen(initialRole: 'child'),
+        ), // Alias for user/child
+
         GetPage(name: '/profile', page: () => const ProfileScreen()),
         GetPage(
           name: '/change-password',

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import '../../../models/login.dart';
 import '../../../controllers/login_controller.dart';
+import '../../widgets/modern_loading.dart'; // Import modern loading
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final LoginController _loginController = LoginController();
-  
+
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -44,9 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
-      descTextStyle: GoogleFonts.poppins(
-        fontSize: 14,
-      ),
+      descTextStyle: GoogleFonts.poppins(fontSize: 14),
     ).show();
   }
 
@@ -56,16 +55,33 @@ class _LoginScreenState extends State<LoginScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 15,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
+                const ModernLoading(color: Color(0xFF3F88EB)),
+                const SizedBox(height: 20),
                 Text(
-                  'Sedang login...',
-                  style: GoogleFonts.poppins(fontSize: 16),
+                  'Sedang memproses...',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF1E293B),
+                  ),
                 ),
               ],
             ),
@@ -100,6 +116,8 @@ class _LoginScreenState extends State<LoginScreen> {
       _showLoadingDialog();
 
       try {
+        // Just for demo purposes, adding artificial delay to show animation
+        await Future.delayed(const Duration(milliseconds: 1500));
         final result = await _loginController.login(credentials);
 
         _hideLoadingDialog();
@@ -127,307 +145,333 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60),
-
-              // Logo and App Name
-              Center(
-                child: Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.asset(
-                        'assets/images/logo_Paradise.jpg',
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          // fallback ke ikon jika asset belum tersedia
-                          return Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF3F88EB),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Icon(
-                              Icons.image_not_supported_outlined,
-                              color: Colors.white,
-                              size: 40,
-                            ),
-                          );
-                        },
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Curved Header Background
+            Stack(
+              children: [
+                ClipPath(
+                  clipper: HeaderClipper(),
+                  child: Container(
+                    height: 280,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF4A90E2), Color(0xFF8E2DE2)],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Paradise',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.48,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Masuk ke akun Anda',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF979797),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // Login Form
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Email Field
-                    Text(
-                      'Email',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan email Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
+                Positioned(
+                  top: 60,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: Image.asset(
+                              'assets/images/logo_paradise.jpg',
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Color(0xFF3F88EB),
+                                  child: Icon(
+                                    Icons.shield,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Selamat Datang',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email tidak boleh kosong';
-                        }
-                        if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)) {
-                          return 'Format email tidak valid';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Password Field
-                    Text(
-                      'Password',
-                      style: GoogleFonts.raleway(
-                        color: const Color(0xFF181818),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan password Anda',
-                        hintStyle: GoogleFonts.raleway(
-                          color: const Color(0xFF979797),
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF3F88EB),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: const Color(0xFF979797),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password tidak boleh kosong';
-                        }
-                        if (value.length < 6) {
-                          return 'Password minimal 6 karakter';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Forgot Password Link
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/forgot-password');
-                        },
-                        child: Text(
-                          'Lupa Password?',
-                          style: GoogleFonts.raleway(
-                            color: const Color(0xFF3F88EB),
+                        Text(
+                          'Masuk untuk melanjutkan',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
+                      ],
                     ),
+                  ),
+                ),
+              ],
+            ),
 
-                    const SizedBox(height: 32),
-
-                    // Login Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3F88EB),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+            // Form Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Transform.translate(
+                offset: const Offset(0, -40), // Pull up to overlap header
+                child: Card(
+                  elevation: 8,
+                  shadowColor: Colors.black12,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          Text(
+                            'Email',
+                            style: GoogleFonts.raleway(
+                              color: const Color(0xFF1E293B),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            style: GoogleFonts.poppins(color: Colors.black87),
+                            decoration: InputDecoration(
+                              hintText: 'user@example.com',
+                              hintStyle: GoogleFonts.poppins(
+                                color: Colors.grey[400],
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.email_outlined,
+                                color: Color(0xFF3F88EB),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF8FAFC),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF3F88EB),
+                                  width: 1.5,
                                 ),
-                              )
-                            : Text(
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty)
+                                return 'Email wajib diisi';
+                              if (!value.contains('@'))
+                                return 'Email tidak valid';
+                              return null;
+                            },
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Text(
+                            'Password',
+                            style: GoogleFonts.raleway(
+                              color: const Color(0xFF1E293B),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            style: GoogleFonts.poppins(color: Colors.black87),
+                            decoration: InputDecoration(
+                              hintText: '••••••••',
+                              hintStyle: GoogleFonts.poppins(
+                                color: Colors.grey[400],
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline,
+                                color: Color(0xFF3F88EB),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF8FAFC),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF3F88EB),
+                                  width: 1.5,
+                                ),
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.grey[500],
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty)
+                                return 'Password wajib diisi';
+                              return null;
+                            },
+                          ),
+
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => Navigator.pushNamed(
+                                context,
+                                '/forgot-password',
+                              ),
+                              child: Text(
+                                'Lupa Password?',
+                                style: GoogleFonts.raleway(
+                                  color: const Color(0xFF3F88EB),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3F88EB),
+                                foregroundColor: Colors.white,
+                                elevation: 5,
+                                shadowColor: const Color(0x403F88EB),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: Text(
                                 'Masuk',
                                 style: GoogleFonts.raleway(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
                                 ),
-                              ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Register Link
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Belum punya akun? ',
-                            style: GoogleFonts.raleway(
-                              color: const Color(0xFF979797),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/register');
-                            },
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Daftar',
-                              style: GoogleFonts.raleway(
-                                color: const Color(0xFF3F88EB),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 32),
-                  ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+
+            // Footer
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24.0, top: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Belum punya akun? ',
+                    style: GoogleFonts.raleway(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/register'),
+                    child: Text(
+                      'Daftar Sekarang',
+                      style: GoogleFonts.raleway(
+                        color: const Color(0xFF8E2DE2),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class HeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height - 50);
+    var firstControlPoint = Offset(size.width / 4, size.height);
+    var firstEndPoint = Offset(size.width / 2, size.height);
+    var secondControlPoint = Offset(size.width * 3 / 4, size.height);
+    var secondEndPoint = Offset(size.width, size.height - 50);
+
+    path.quadraticBezierTo(
+      firstControlPoint.dx,
+      firstControlPoint.dy,
+      firstEndPoint.dx,
+      firstEndPoint.dy,
+    );
+    path.quadraticBezierTo(
+      secondControlPoint.dx,
+      secondControlPoint.dy,
+      secondEndPoint.dx,
+      secondEndPoint.dy,
+    );
+
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

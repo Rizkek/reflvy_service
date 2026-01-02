@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'onboarding_screen.dart';
+import 'widgets/modern_loading.dart'; // Import custom loading
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Initialize animations - faster loading
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200), // Reduced from 2000ms
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
@@ -55,12 +57,19 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToNext() {
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      // Reduced from 3000ms
+    Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const OnboardingScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
         );
       }
     });
@@ -75,89 +84,136 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF4A90E2), // Light blue
-              Color(0xFF357ABD), // Darker blue
-            ],
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF4A90E2), // Primary Blue
+                  Color(0xFF8E2DE2), // Modern Purple accent
+                ],
+              ),
+            ),
           ),
-        ),
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo Container
-                    Container(
-                      width: 140,
-                      height: 140,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          70,
-                        ), // Full circle (half of 140px image size)
-                        child: Image.asset(
-                          'assets/images/logo_paradise.jpg',
-                          width: 140,
-                          height: 140,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Fallback widget if image not found - simple icon only
-                            return Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.2),
+
+          // Background Decor Blobs (Optional for texture)
+          Positioned(
+            top: -50,
+            right: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+
+          Center(
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Logo Container with shadow
+                        Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
                               ),
-                              child: const Icon(
-                                Icons.shield,
-                                size: 80,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(75),
+                            child: Image.asset(
+                              'assets/images/logo_paradise.jpg',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.white,
+                                  child: const Icon(
+                                    Icons.shield_moon_outlined,
+                                    size: 80,
+                                    color: Color(0xFF4A90E2),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                      ),
+
+                        const SizedBox(height: 40),
+
+                        // Title
+                        Text(
+                          'PARADISE',
+                          style: GoogleFonts.outfit(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 4,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Tagline
+                        Text(
+                          'Your Privacy Guardian',
+                          style: GoogleFonts.raleway(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.9),
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+
+                        const SizedBox(height: 60),
+
+                        // Modern Loading Indicator
+                        const ModernLoading(color: Colors.white),
+                      ],
                     ),
+                  ),
+                );
+              },
+            ),
+          ),
 
-                    const SizedBox(height: 40),
-
-                    // Tagline
-                    const Text(
-                      'Your Privacy Guardian',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                        letterSpacing: 1,
-                      ),
-                    ),
-
-                    const SizedBox(height: 60),
-
-                    // Loading indicator
-                    const SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        strokeWidth: 3,
-                      ),
-                    ),
-                  ],
+          // Bottom version/copyright text
+          Positioned(
+            bottom: 30,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'v1.0.0',
+                style: GoogleFonts.raleway(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 12,
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -19,103 +19,150 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              children: [
-                // App Title - Static
-                Container(
-                  padding: const EdgeInsets.only(top: 16, bottom: 32),
-                  child: Text(
-                    'Paradise',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.raleway(
-                      color: const Color(0xFF181818),
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.67,
+          child: Column(
+            children: [
+              // Skip Button
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextButton(
+                    onPressed: _skipOnboarding,
+                    child: Text(
+                      'Skip',
+                      style: GoogleFonts.raleway(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
+              ),
 
-                // Sliding Image Section
-                Expanded(
-                  flex: 5,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    child: PageView(
-                      controller: _pageController,
-                      onPageChanged: (int page) {
-                        setState(() {
-                          currentPage = page;
-                        });
-                      },
+              // Sliding Image Section
+              Expanded(
+                flex: 4,
+                child: PageView(
+                  controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
+                  onPageChanged: (int page) {
+                    setState(() {
+                      currentPage = page;
+                    });
+                  },
+                  children: [
+                    _buildImagePage("assets/images/Onboarding1.png"),
+                    _buildImagePage("assets/images/Onboarding2.png"),
+                    _buildImagePage("assets/images/Onboarding3.png"),
+                  ],
+                ),
+              ),
+
+              // Static Content Section
+              Expanded(
+                flex: 3,
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Image.asset(
-                          "assets/images/Onboarding1.png",
-                          fit: BoxFit.contain,
+                        // Page Indicators
+                        _buildPageIndicators(),
+
+                        const SizedBox(height: 10),
+
+                        // Dynamic Title based on current page
+                        Column(
+                          children: [
+                            Text(
+                              _getTitleForPage(currentPage),
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFF1E293B),
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Dynamic Description
+                            Text(
+                              _getDescriptionForPage(currentPage),
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.raleway(
+                                color: const Color(0xFF64748B),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
                         ),
-                        Image.asset(
-                          "assets/images/Onboarding2.png",
-                          fit: BoxFit.contain,
-                        ),
-                        Image.asset(
-                          "assets/images/Onboarding3.png",
-                          fit: BoxFit.contain,
+
+                        // Main Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: currentPage == 2
+                                ? _getStarted
+                                : _nextPage,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3F88EB),
+                              foregroundColor: Colors.white,
+                              elevation: 8,
+                              shadowColor: const Color(0x403F88EB),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              currentPage == 2 ? 'Mulai Sekarang' : 'Lanjut',
+                              style: GoogleFonts.raleway(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-
-                // Static Content Section
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Dynamic Title based on current page
-                      Text(
-                        _getTitleForPage(currentPage),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.raleway(
-                          color: const Color(0xFF181818),
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                          letterSpacing: -0.48,
-                        ),
-                      ),
-
-                      // Page Indicators
-                      _buildPageIndicators(),
-
-                      // Dynamic Description based on current page
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          _getDescriptionForPage(currentPage),
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.raleway(
-                            color: const Color(0xFF979797),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            height: 1.4,
-                            letterSpacing: -0.48,
-                          ),
-                        ),
-                      ),
-
-                      // Buttons Section
-                      _buildBottomButtons(currentPage),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildImagePage(String assetPath) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Center(
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              size: 100,
+              color: Colors.grey[300],
+            ),
+          );
+        },
       ),
     );
   }
@@ -123,26 +170,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _getTitleForPage(int pageIndex) {
     switch (pageIndex) {
       case 0:
-        return "Lindungi\nDirimu";
+        return "Lindungi Keluarga\nDengan Cerdas";
       case 1:
-        return "Mudah\nDigunakan";
+        return "Notifikasi Real-time\nKe Ponsel Anda";
       case 2:
-        return "Siap\nMulai";
+        return "Aman & Nyaman\nBersama Paradise";
       default:
-        return "Lindungi\nDirimu";
+        return "Paradise";
     }
   }
 
   String _getDescriptionForPage(int pageIndex) {
     switch (pageIndex) {
       case 0:
-        return "Deteksi otomatis konten NSFW sebelum kamu lihat. Aman & nyaman dalam genggaman.";
+        return "Deteksi otomatis konten yang tidak diinginkan dengan teknologi AI yang canggih.";
       case 1:
-        return "Interface yang sederhana dan intuitif membuat pengalaman browsing lebih menyenangkan.";
+        return "Dapatkan pemberitahuan langsung saat terdeteksi aktivitas yang mencurigakan.";
       case 2:
-        return "Mulai petualangan browsing yang aman dan nyaman bersama Paradise sekarang juga!";
+        return "Ciptakan lingkungan digital yang sehat untuk tumbuh kembang buah hati.";
       default:
-        return "Deteksi otomatis konten NSFW sebelum kamu lihat. Aman & nyaman dalam genggaman.";
+        return "";
     }
   }
 
@@ -154,10 +201,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: isActive ? 28 : 8,
+          width: isActive ? 32 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF3F88EB) : const Color(0xFFD9D9D9),
+            color: isActive ? const Color(0xFF3F88EB) : const Color(0xFFE2E8F0),
             borderRadius: BorderRadius.circular(20),
           ),
         );
@@ -165,88 +212,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildBottomButtons(int pageIndex) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 32, top: 16),
-      child: Row(
-        children: [
-          // Left Button
-          Expanded(
-            child: _buildButton(
-              text: pageIndex == 2 ? 'Back' : 'Skip',
-              isOutlined: true,
-              onTap: pageIndex == 2 ? _previousPage : _skipOnboarding,
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Right Button
-          Expanded(
-            child: _buildButton(
-              text: pageIndex == 2 ? 'Get Started' : 'Next',
-              isOutlined: false,
-              onTap: pageIndex == 2 ? _getStarted : _nextPage,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildButton({
-    required String text,
-    required bool isOutlined,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 54,
-        decoration: BoxDecoration(
-          color: isOutlined ? Colors.transparent : const Color(0xFF3F88EB),
-          borderRadius: BorderRadius.circular(12),
-          border: isOutlined
-              ? Border.all(color: const Color(0xFF3F88EB), width: 1.5)
-              : null,
-          boxShadow: !isOutlined
-              ? [
-                  const BoxShadow(
-                    color: Color(0x19003078),
-                    blurRadius: 20,
-                    offset: Offset(0, 4),
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: GoogleFonts.raleway(
-              color: isOutlined ? const Color(0xFF3F88EB) : Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.48,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _nextPage() {
     if (currentPage < 2) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  void _previousPage() {
-    if (currentPage > 0) {
-      _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );

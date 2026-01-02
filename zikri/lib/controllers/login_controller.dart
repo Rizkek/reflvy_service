@@ -109,6 +109,13 @@ class LoginController {
           const Duration(seconds: 1),
         ); // Simulate network delay
 
+        // Simple role determination for demo:
+        // parent@paradise.com -> parent
+        // anything else -> child
+        final role = credentials.email.startsWith('parent')
+            ? 'parent'
+            : 'child';
+
         _currentUser = LoginUser(
           uid: 'demo_uid_123',
           email: credentials.email,
@@ -119,7 +126,10 @@ class LoginController {
           isVerified: true,
           gender: 'Laki-laki',
           age: 25,
+          role: role,
         );
+
+        await SecureStorageService.saveUserData(_currentUser!);
 
         _setState(LoginState.success);
 
@@ -189,6 +199,7 @@ class LoginController {
         isVerified: profileData['is_verified'] ?? false,
         gender: profileData['gender'],
         age: profileData['age'],
+        role: profileData['role'] ?? 'child', // Fallback to child
       );
 
       // Step 5: Save to secure storage
@@ -225,6 +236,22 @@ class LoginController {
           type: LoginResultType.notLoggedIn,
         );
       }
+
+      // DEMO MODE: Check directly from storage without Firebase
+      if (DEMO_MODE) {
+        _currentUser = await SecureStorageService.getUserData();
+        if (_currentUser != null) {
+          _setState(LoginState.success);
+          return LoginResult(
+            success: true,
+            message: 'User is logged in (Demo)',
+            type: LoginResultType.success,
+            user: _currentUser,
+          );
+        }
+      }
+
+      // PRODUCTION CHECKS
 
       // Check if Firebase user exists (refresh token check)
       final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
@@ -289,8 +316,10 @@ class LoginController {
   // Logout
   Future<void> logout() async {
     try {
-      // Sign out from Firebase
-      await firebase_auth.FirebaseAuth.instance.signOut();
+      if (!DEMO_MODE) {
+        // Sign out from Firebase
+        await firebase_auth.FirebaseAuth.instance.signOut();
+      }
 
       // Clear secure storage
       await SecureStorageService.clearAllData();
@@ -301,7 +330,7 @@ class LoginController {
       _clearError();
     } catch (e) {
       print('Error during logout: $e');
-      // Force clear even if Firebase logout fails
+      // Force clear even if logout fails
       await SecureStorageService.clearAllData();
       _currentUser = null;
       _setState(LoginState.idle);
@@ -339,6 +368,7 @@ class LoginController {
               isVerified: _currentUser!.isVerified,
               gender: _currentUser!.gender,
               age: _currentUser!.age,
+              role: _currentUser!.role,
             );
             await SecureStorageService.saveUserData(_currentUser!);
           }

@@ -18,7 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _registerController = RegisterController();
-  
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -26,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // Gender and birthdate fields
   String? _selectedGender;
+  String? _selectedRole;
   DateTime? _selectedBirthdate;
   final List<String> _genderOptions = ['Laki-laki', 'Perempuan'];
 
@@ -42,13 +43,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _selectBirthdate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(
-        const Duration(days: 365 * 18),
-      ),
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
       firstDate: DateTime(1900),
-      lastDate: DateTime.now().subtract(
-        const Duration(days: 365 * 13),
-      ),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -68,8 +65,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -95,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       btnOkColor: const Color(0xFF3F88EB),
       btnOkText: 'OK',
       btnOkOnPress: () {
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       },
     ).show();
   }
@@ -162,6 +169,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if (_selectedRole == null) {
+      _showErrorDialog('Data Belum Lengkap', 'Silakan pilih peran Anda.');
+      return;
+    }
+
     if (_selectedGender == null) {
       _showErrorDialog(
         'Data Belum Lengkap',
@@ -186,6 +198,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       gender: _selectedGender!,
       birthdate: _selectedBirthdate!,
       acceptTerms: _acceptTerms,
+      role: _selectedRole!,
     );
 
     // Start loading
@@ -195,16 +208,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       // Call controller to register
-      final result = await _registerController.register(user, _confirmPasswordController.text);
+      final result = await _registerController.register(
+        user,
+        _confirmPasswordController.text,
+      );
 
       if (mounted) {
         if (result.success) {
           switch (result.type) {
             case RegisterResultType.success:
-              _showSuccessDialog(
-                'Registrasi Berhasil!',
-                result.message,
-              );
+              _showSuccessDialog('Registrasi Berhasil!', result.message);
               break;
             case RegisterResultType.partialSuccess:
               _showWarningDialog(
@@ -216,10 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               );
               break;
             default:
-              _showSuccessDialog(
-                'Registrasi Berhasil!',
-                result.message,
-              );
+              _showSuccessDialog('Registrasi Berhasil!', result.message);
           }
         } else {
           _showErrorDialog(
@@ -232,10 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorDialog(
-          'Terjadi Kesalahan',
-          'Kesalahan tidak terduga: $e',
-        );
+        _showErrorDialog('Terjadi Kesalahan', 'Kesalahan tidak terduga: $e');
       }
     } finally {
       if (mounted) {
@@ -590,6 +597,79 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         }
                         if (value != _passwordController.text) {
                           return 'Password tidak cocok';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Role Selection
+                    Text(
+                      'Peran',
+                      style: GoogleFonts.raleway(
+                        color: const Color(0xFF181818),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _selectedRole,
+                      decoration: InputDecoration(
+                        hintText: 'Pilih peran',
+                        hintStyle: GoogleFonts.raleway(
+                          color: const Color(0xFF979797),
+                          fontSize: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE0E0E0),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE0E0E0),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF3F88EB),
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      items: ['Anak', 'Orang Tua'].map((String role) {
+                        return DropdownMenuItem<String>(
+                          value: role == 'Orang Tua' ? 'parent' : 'child',
+                          child: Text(
+                            role,
+                            style: GoogleFonts.raleway(
+                              fontSize: 14,
+                              color: const Color(0xFF181818),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedRole = newValue;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Pilih peran';
                         }
                         return null;
                       },

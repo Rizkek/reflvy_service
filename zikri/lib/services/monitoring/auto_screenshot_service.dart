@@ -10,6 +10,7 @@ import 'app_detection_service.dart';
 import 'screen_capture_service.dart';
 import 'content_analysis_service.dart';
 import 'overlay_service.dart';
+import '../../controllers/settings_controller.dart';
 
 /**
  * AutoScreenshotService - Service untuk auto capture setiap 5 detik
@@ -113,9 +114,7 @@ class AutoScreenshotService extends GetxController {
               ),
               ElevatedButton(
                 onPressed: () => Get.back(result: true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                 child: Text('Buka Settings'),
               ),
             ],
@@ -242,6 +241,27 @@ class AutoScreenshotService extends GetxController {
       currentApp.value = appName;
       print('📱 Current app: $appName');
 
+      // --- SETTINGS CHECK ---
+      final settings = Get.isRegistered<SettingsController>()
+          ? Get.find<SettingsController>()
+          : Get.put(SettingsController());
+
+      // 1. Check Blocked Apps
+      if (settings.isAppBlocked(appName)) {
+        print('🚫 App is BLOCKED by parent settings: $appName');
+        // Force INTERVENTION (High Level)
+        _showInterventionPopup(ContentLevel.high, appName, Uint8List(0));
+        return;
+      }
+
+      // 2. Check Protection Enabled
+      if (!settings.isProtectionEnabled.value) {
+        // Just log, don't capture/analyze
+        print('🛡️ Protection is DISABLED in settings. Skipping analysis.');
+        return;
+      }
+      // ----------------------
+
       // STEP 2: Capture FULL SCREEN
       final Uint8List? imageBytes = await _screenCaptureService.captureFrame();
 
@@ -268,6 +288,14 @@ class AutoScreenshotService extends GetxController {
       }
 
       print('📊 API Response - NSFW Level: $nsfwLevel');
+
+      // 3. Check Sensitivity Level
+      if (nsfwLevel < settings.sensitivityLevel.value) {
+        print(
+          '⚠️ Content ignored due to sensitivity settings (Level $nsfwLevel < ${settings.sensitivityLevel.value})',
+        );
+        return;
+      }
 
       // STEP 4: Jika terdeteksi NSFW (level > 0) → PAUSE & tampilkan popup
       if (nsfwLevel > 0) {
@@ -320,7 +348,8 @@ class AutoScreenshotService extends GetxController {
 
         print('✅ Screenshot #${screenshotCount.value} saved');
         print(
-            '   📦 Size: ${(imageBytes.length / 1024).toStringAsFixed(2)} KB');
+          '   📦 Size: ${(imageBytes.length / 1024).toStringAsFixed(2)} KB',
+        );
       }
     } catch (e, stackTrace) {
       print('❌ Error in _captureAndSave: $e');
@@ -336,7 +365,9 @@ class AutoScreenshotService extends GetxController {
    * @return int? - NSFW level (0, 1, 2, 3) atau null jika error
    */
   Future<int?> _sendToDetectNsfwApi(
-      Uint8List imageBytes, String appName) async {
+    Uint8List imageBytes,
+    String appName,
+  ) async {
     try {
       // Get Firebase Auth token
       final user = FirebaseAuth.instance.currentUser;

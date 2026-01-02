@@ -39,84 +39,53 @@ class DashboardPageState extends State<DashboardPage> {
       _isLoadingWeekly = true;
     });
 
-    // Try to load from secure storage first for quick display
-    final secureDaily = await StatisticsService.getDailyBreakdown();
-    if (secureDaily != null && secureDaily.isNotEmpty && mounted) {
-      setState(() {
-        _daily = secureDaily;
-        _isLoadingWeekly = false;
-      });
-      print('Dashboard loaded ${_daily.length} days from secure storage');
-    }
-    
-    // Always fetch today's data
-    final data = await StatisticsService.fetchToday();
-    
+    // Simulate network delay using manual dummy data
+    await Future.delayed(const Duration(milliseconds: 800));
+
     if (!mounted) return;
+
+    // Dummy Data for Statistics
     setState(() {
-      _stats = data?['statistics'] as Map<String, dynamic>?;
+      _stats = {
+        'totalGrandTotal': 125,
+        'totalLow': 80,
+        'totalMedium': 30,
+        'totalHigh': 15,
+        'appBreakdown': {
+          'YouTube': {'Total': 50},
+          'Instagram': {'Total': 40},
+          'WhatsApp': {'Total': 20},
+          'Chrome': {'Total': 15},
+        }
+      };
+      
       _appBreakdown = (_stats?['appBreakdown'] as Map?)?.cast<String, dynamic>();
       _isLoadingStats = false;
-    });
-    
-    // Check if 7 days cache is still valid (already fetched today)
-    // get7Days() will return cached data if already fetched today, otherwise fetch fresh
-    final w7 = await StatisticsService.get7Days();
-    
-    if (!mounted) return;
-    setState(() {
-      _daily = ((w7?['statistics']?['dailyBreakdown']) as List? ?? [])
-          .cast<Map>()
-          .map((e) => e.cast<String, dynamic>())
-          .toList();
-        _isLoadingWeekly = false;
-      });    print('Dashboard loaded with ${_daily.length} days of data');
-  }
-
-  Future<void> refreshStats() async {
-    setState(() {
-      _isLoadingStats = true;
-      _isLoadingWeekly = true;
-    });
-
-    // Force fetch fresh data for both today and 7 days
-    final data = await StatisticsService.fetchToday();
-    
-    if (!mounted) return;
-    setState(() {
-      _stats = data?['statistics'] as Map<String, dynamic>?;
-      _appBreakdown = (_stats?['appBreakdown'] as Map?)?.cast<String, dynamic>();
-      _isLoadingStats = false;
-    });
-    
-    final w7 = await StatisticsService.fetch7Days();
-    
-    if (!mounted) return;
-    setState(() {
-      _daily = ((w7?['statistics']?['dailyBreakdown']) as List? ?? [])
-          .cast<Map>()
-          .map((e) => e.cast<String, dynamic>())
-          .toList();
+      
+      // Dummy Data for Weekly Breakdown
+      _daily = [
+        {'date': '2025-01-01', 'total': 45, 'high': 5, 'medium': 10, 'low': 30},
+        {'date': '2024-12-31', 'total': 38, 'high': 2, 'medium': 8, 'low': 28},
+        {'date': '2024-12-30', 'total': 50, 'high': 8, 'medium': 12, 'low': 30},
+        {'date': '2024-12-29', 'total': 25, 'high': 1, 'medium': 4, 'low': 20},
+        {'date': '2024-12-28', 'total': 60, 'high': 10, 'medium': 15, 'low': 35},
+        {'date': '2024-12-27', 'total': 30, 'high': 3, 'medium': 7, 'low': 20},
+        {'date': '2024-12-26', 'total': 40, 'high': 4, 'medium': 11, 'low': 25},
+      ];
       _isLoadingWeekly = false;
     });
     
-    print('Dashboard refreshed with ${_daily.length} days of data');
+    print('Dashboard loaded with DUMMY DATA');
+  }
+
+  Future<void> refreshStats() async {
+    // Just reload the dummy data
+    await _loadStats();
   }
 
   Future<void> _loadDisplayName() async {
-    final user = await SecureStorageService.getUserData();
-    if (!mounted) return;
-    if (user?.displayName != null && user!.displayName!.trim().isNotEmpty) {
-      setState(() => _displayName = user.displayName!.trim());
-      return;
-    }
-    // Fallback to any raw stored fields if available
-    final all = await SecureStorageService.getAllData();
-    final raw = all['display_name'] ?? all['displayName'];
-    if (raw != null && raw.trim().isNotEmpty) {
-      if (!mounted) return;
-      setState(() => _displayName = raw.trim());
-    }
+    // Dummy display name
+    setState(() => _displayName = 'Zikri (Dummy)');
   }
 
   @override
@@ -138,7 +107,7 @@ class DashboardPageState extends State<DashboardPage> {
         children: [
           Container(
             width: double.infinity,
-            height: headerHeight.clamp(80.0, 120.0),
+            height: headerHeight.clamp(80.0, 120.0) + MediaQuery.of(context).padding.top,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
