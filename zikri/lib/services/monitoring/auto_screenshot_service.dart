@@ -12,18 +12,16 @@ import 'content_analysis_service.dart';
 import 'overlay_service.dart';
 import '../../controllers/settings_controller.dart';
 
-/**
- * AutoScreenshotService - Service untuk auto capture setiap 5 detik
- * 
- * FUNGSI:
- * 1. Timer otomatis setiap 5 detik
- * 2. Capture FULL SCREEN (bukan cuma app Flutter)
- * 3. Detect app yang sedang dibuka
- * 4. Analisis konten dengan AI (dummy: random LOW/MEDIUM/HIGH)
- * 5. Intervensi otomatis jika detect konten berbahaya
- * 6. Minimize app ke home screen jika user klik "Tutup Aplikasi"
- * 7. Track semua screenshot dalam list (in-memory)
- */
+/// AutoScreenshotService - Service untuk auto capture setiap 5 detik
+/// 
+/// FUNGSI:
+/// 1. Timer otomatis setiap 5 detik
+/// 2. Capture FULL SCREEN (bukan cuma app Flutter)
+/// 3. Detect app yang sedang dibuka
+/// 4. Analisis konten dengan AI (dummy: random LOW/MEDIUM/HIGH)
+/// 5. Intervensi otomatis jika detect konten berbahaya
+/// 6. Minimize app ke home screen jika user klik "Tutup Aplikasi"
+/// 7. Track semua screenshot dalam list (in-memory)
 class AutoScreenshotService extends GetxController {
   // Service untuk detect app name
   final AppDetectionService _appDetectionService = AppDetectionService();
@@ -52,15 +50,13 @@ class AutoScreenshotService extends GetxController {
   // Timer untuk auto-resume monitoring jika overlay tidak merespons
   Timer? _pauseTimeoutTimer;
 
-  /**
-   * START - Mulai auto screenshot dengan CHECK SEMUA PERMISSION DULU
-   * 
-   * FLOW:
-   * 1. Check & request Screen Capture permission
-   * 2. Check & request Overlay permission (SYSTEM_ALERT_WINDOW)
-   * 3. Setup overlay event listener
-   * 4. Start monitoring
-   */
+  /// START - Mulai auto screenshot dengan CHECK SEMUA PERMISSION DULU
+  /// 
+  /// FLOW:
+  /// 1. Check & request Screen Capture permission
+  /// 2. Check & request Overlay permission (SYSTEM_ALERT_WINDOW)
+  /// 3. Setup overlay event listener
+  /// 4. Start monitoring
   Future<void> startAutoScreenshot() async {
     if (isRecording.value) return;
 
@@ -189,14 +185,12 @@ class AutoScreenshotService extends GetxController {
     }
   }
 
-  /**
-   * STOP - Hentikan auto screenshot
-   * 
-   * FLOW:
-   * 1. Cancel timer
-   * 2. Stop MediaProjection
-   * 3. Show summary
-   */
+  /// STOP - Hentikan auto screenshot
+  /// 
+  /// FLOW:
+  /// 1. Cancel timer
+  /// 2. Stop MediaProjection
+  /// 3. Show summary
   Future<void> stopAutoScreenshot() async {
     // Cancel timer
     _timer?.cancel();
@@ -216,18 +210,16 @@ class AutoScreenshotService extends GetxController {
     );
   }
 
-  /**
-   * CAPTURE - Ambil 1 screenshot, kirim ke API, dan tampilkan popup sesuai level
-   * 
-   * FLOW:
-   * 1. Cek jika sedang pause (popup tampil) → skip
-   * 2. Detect app yang sedang dibuka (UsageStatsManager)
-   * 3. Capture full screen frame (MediaProjection)
-   * 4. Kirim ke API /api/detectnsfw
-   * 5. Terima response: {"nsfw_level": 0-3, "status": "success"}
-   * 6. Jika nsfw_level > 0 → PAUSE monitoring & tampilkan popup
-   * 7. Timer 5 detik HANYA restart setelah popup ditutup
-   */
+  /// CAPTURE - Ambil 1 screenshot, kirim ke API, dan tampilkan popup sesuai level
+  /// 
+  /// FLOW:
+  /// 1. Cek jika sedang pause (popup tampil) → skip
+  /// 2. Detect app yang sedang dibuka (UsageStatsManager)
+  /// 3. Capture full screen frame (MediaProjection)
+  /// 4. Kirim ke API /api/detectnsfw
+  /// 5. Terima response: {"nsfw_level": 0-3, "status": "success"}
+  /// 6. Jika nsfw_level > 0 → PAUSE monitoring & tampilkan popup
+  /// 7. Timer 5 detik HANYA restart setelah popup ditutup
   Future<void> _captureAndSave() async {
     // Jika sedang pause (popup intervensi muncul), skip capture
     if (isPaused.value) {
@@ -357,13 +349,11 @@ class AutoScreenshotService extends GetxController {
     }
   }
 
-  /**
-   * Kirim screenshot ke API /api/detectnsfw
-   * 
-   * @param imageBytes - Screenshot dalam bentuk Uint8List
-   * @param appName - Nama aplikasi yang sedang dibuka
-   * @return int? - NSFW level (0, 1, 2, 3) atau null jika error
-   */
+  /// Kirim screenshot ke API /api/detectnsfw
+  /// 
+  /// @param imageBytes - Screenshot dalam bentuk Uint8List
+  /// @param appName - Nama aplikasi yang sedang dibuka
+  /// @return int? - NSFW level (0, 1, 2, 3) atau null jika error
   Future<int?> _sendToDetectNsfwApi(
     Uint8List imageBytes,
     String appName,
@@ -436,14 +426,12 @@ class AutoScreenshotService extends GetxController {
     }
   }
 
-  /**
-   * Fungsi: Tampilkan popup intervensi REALTIME di atas TikTok/Instagram
-   * Input: level, appName, imageBytes
-   * 
-   * REALTIME = Popup muncul langsung di atas aplikasi yang sedang dibuka!
-   * LOW: User bisa abaikan atau tutup app
-   * MEDIUM/HIGH: User harus tutup app
-   */
+  /// Fungsi: Tampilkan popup intervensi REALTIME di atas TikTok/Instagram
+  /// Input: level, appName, imageBytes
+  /// 
+  /// REALTIME = Popup muncul langsung di atas aplikasi yang sedang dibuka!
+  /// LOW: User bisa abaikan atau tutup app
+  /// MEDIUM/HIGH: User harus tutup app
   void _showInterventionPopup(
     ContentLevel level,
     String appName,
@@ -503,13 +491,11 @@ class AutoScreenshotService extends GetxController {
     }
   }
 
-  /**
-   * Handle event dari native overlay (user klik tombol)
-   * 
-   * Event types:
-   * - dismissed: User klik "Abaikan" (LOW only)
-   * - close_app: User klik "Tutup Aplikasi"
-   */
+  /// Handle event dari native overlay (user klik tombol)
+  /// 
+  /// Event types:
+  /// - dismissed: User klik "Abaikan" (LOW only)
+  /// - close_app: User klik "Tutup Aplikasi"
   void _handleOverlayEvent(Map<String, dynamic> event) {
     print('📨 Overlay event received: $event');
 

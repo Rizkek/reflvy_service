@@ -165,7 +165,7 @@ class ParentSettingsScreen extends StatelessWidget {
       child: SwitchListTile(
         value: value,
         onChanged: onChanged,
-        activeColor: activeColor,
+        activeThumbColor: activeColor,
         secondary: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(

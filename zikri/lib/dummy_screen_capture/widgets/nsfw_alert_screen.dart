@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/**
- * NsfwAlertScreen - Full-screen notification untuk konten NSFW
- * 
- * Ditampilkan secara immersive (tanpa status bar/nav bar) ketika API
- * mengembalikan nsfw_level 1, 2, atau 3.
- * 
- * LEVEL:
- * - 0: Aman (tidak ada notifikasi)
- * - 1: Low NSFW (peringatan rendah, bisa abaikan)
- * - 2: Medium NSFW (peringatan sedang, disarankan tutup)
- * - 3: High NSFW (peringatan tinggi, harus tutup)
- */
+/// NsfwAlertScreen - Full-screen notification untuk konten NSFW
+/// 
+/// Ditampilkan secara immersive (tanpa status bar/nav bar) ketika API
+/// mengembalikan nsfw_level 1, 2, atau 3.
+/// 
+/// LEVEL:
+/// - 0: Aman (tidak ada notifikasi)
+/// - 1: Low NSFW (peringatan rendah, bisa abaikan)
+/// - 2: Medium NSFW (peringatan sedang, disarankan tutup)
+/// - 3: High NSFW (peringatan tinggi, harus tutup)
 class NsfwAlertScreen extends StatefulWidget {
   final int nsfwLevel;
   final String appName;

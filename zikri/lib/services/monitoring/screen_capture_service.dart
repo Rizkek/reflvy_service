@@ -1,19 +1,17 @@
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
 
-/**
- * ScreenCaptureService - Service untuk capture full screen
- * 
- * FUNGSI:
- * 1. Request MediaProjection permission
- * 2. Capture screenshot FULL SCREEN (termasuk app lain)
- * 3. Return image sebagai Uint8List (byte array)
- * 
- * CARA KERJA:
- * - Menggunakan MethodChannel untuk komunikasi dengan native code (Kotlin)
- * - Native code menggunakan MediaProjection API Android
- * - Image dikembalikan dalam format PNG
- */
+/// ScreenCaptureService - Service untuk capture full screen
+/// 
+/// FUNGSI:
+/// 1. Request MediaProjection permission
+/// 2. Capture screenshot FULL SCREEN (termasuk app lain)
+/// 3. Return image sebagai Uint8List (byte array)
+/// 
+/// CARA KERJA:
+/// - Menggunakan MethodChannel untuk komunikasi dengan native code (Kotlin)
+/// - Native code menggunakan MediaProjection API Android
+/// - Image dikembalikan dalam format PNG
 class ScreenCaptureService {
   // Channel untuk komunikasi dengan native code
   static const platform = MethodChannel('com.paradise.app/screen_capture');
@@ -24,18 +22,16 @@ class ScreenCaptureService {
   /// Getter untuk cek status capturing
   bool get isCapturing => _isCapturing;
 
-  /**
-   * STEP 1: Request permission dan start capture
-   * 
-   * FLOW:
-   * 1. Flutter call method 'startCapture'
-   * 2. Native (Kotlin) show system dialog
-   * 3. User klik "Start now"
-   * 4. Native setup MediaProjection
-   * 5. Return true/false ke Flutter
-   * 
-   * @return true jika user approve, false jika deny
-   */
+  /// STEP 1: Request permission dan start capture
+  /// 
+  /// FLOW:
+  /// 1. Flutter call method 'startCapture'
+  /// 2. Native (Kotlin) show system dialog
+  /// 3. User klik "Start now"
+  /// 4. Native setup MediaProjection
+  /// 5. Return true/false ke Flutter
+  /// 
+  /// @return true jika user approve, false jika deny
   Future<bool> startCapture() async {
     try {
       print('🚀 ScreenCaptureService: Requesting capture permission...');
@@ -70,11 +66,9 @@ class ScreenCaptureService {
     }
   }
 
-  /**
-   * STEP 2: Capture frame - LANGSUNG tanpa wait
-   * 
-   * @return Uint8List image data (PNG), atau null jika belum ready
-   */
+  /// STEP 2: Capture frame - LANGSUNG tanpa wait
+  /// 
+  /// @return Uint8List image data (PNG), atau null jika belum ready
   Future<Uint8List?> captureFrame() async {
     if (!_isCapturing) {
       print('⚠️ ScreenCaptureService: Capture not started yet!');
@@ -104,14 +98,12 @@ class ScreenCaptureService {
     }
   }
 
-  /**
-   * STEP 3: Stop capture dan cleanup
-   * 
-   * FLOW:
-   * 1. Flutter call method 'stopCapture'
-   * 2. Native release MediaProjection
-   * 3. Free memory dan resources
-   */
+  /// STEP 3: Stop capture dan cleanup
+  /// 
+  /// FLOW:
+  /// 1. Flutter call method 'stopCapture'
+  /// 2. Native release MediaProjection
+  /// 3. Free memory dan resources
   Future<void> stopCapture() async {
     if (!_isCapturing) {
       print('⚠️ ScreenCaptureService: Capture already stopped');

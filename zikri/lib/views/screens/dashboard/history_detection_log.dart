@@ -5,8 +5,7 @@ class HistoryDetailScreen extends StatefulWidget {
   final String title;
   final String type; // "weekly", "apps", atau "activity"
 
-  const HistoryDetailScreen({Key? key, required this.title, required this.type})
-    : super(key: key);
+  const HistoryDetailScreen({super.key, required this.title, required this.type});
 
   @override
   State<HistoryDetailScreen> createState() => _HistoryDetailScreenState();
@@ -24,7 +23,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
   bool _weeklyLoaded = false;
 
   // State for activity data (currently using empty list as activity endpoint not available)
-  List<Map<String, dynamic>> _activityHistory = [];
+  final List<Map<String, dynamic>> _activityHistory = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -227,7 +226,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
                   ),
                 )
               else
-                ...weeklyData.map((day) => _buildDayDetail(day)).toList(),
+                ...weeklyData.map((day) => _buildDayDetail(day)),
             ],
           ),
         );
@@ -318,7 +317,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
                   ),
                 )
               else
-                ..._todayAppItems.map((app) => _buildAppDetail(app)).toList(),
+                ..._todayAppItems.map((app) => _buildAppDetail(app)),
             ],
           ),
         );
@@ -880,16 +879,21 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
 
   Map<String, dynamic> _iconAndColorForApp(String name) {
     final n = name.toLowerCase();
-    if (n.contains('you'))
+    if (n.contains('you')) {
       return {'icon': Icons.play_arrow, 'color': const Color(0xFFDC2626)};
-    if (n.contains('insta'))
+    }
+    if (n.contains('insta')) {
       return {'icon': Icons.camera_alt, 'color': const Color(0xFF8B5CF6)};
-    if (n.contains('face'))
+    }
+    if (n.contains('face')) {
       return {'icon': Icons.facebook, 'color': const Color(0xFF2563EB)};
-    if (n.contains('twit') || n == 'x')
+    }
+    if (n.contains('twit') || n == 'x') {
       return {'icon': Icons.close, 'color': const Color(0xFF0EA5E9)};
-    if (n.contains('tiktok') || n.contains('tok'))
+    }
+    if (n.contains('tiktok') || n.contains('tok')) {
       return {'icon': Icons.music_note, 'color': const Color(0xFF111827)};
+    }
     return {'icon': Icons.apps, 'color': const Color(0xFF3B82F6)};
   }
 
@@ -1046,7 +1050,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen>
           else
             ..._activityHistory
                 .map((activity) => _buildActivityItem(activity))
-                .toList(),
+                ,
         ],
       ),
     );

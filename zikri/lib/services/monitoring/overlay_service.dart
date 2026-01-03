@@ -1,24 +1,20 @@
 import 'package:flutter/services.dart';
 
-/**
- * OVERLAY SERVICE - Komunikasi dengan native OverlayService untuk popup realtime
- * 
- * FLOW:
- * 1. showOverlay() → kirim intent ke native OverlayService
- * 2. Native tampilkan overlay di atas TikTok/Instagram (REALTIME)
- * 3. User pilih aksi (Abaikan/Tutup Aplikasi)
- * 4. Native broadcast hasil ke Flutter via EventChannel
- * 5. Flutter handle callback (onDismiss/onCloseApp)
- */
+/// OVERLAY SERVICE - Komunikasi dengan native OverlayService untuk popup realtime
+/// 
+/// FLOW:
+/// 1. showOverlay() → kirim intent ke native OverlayService
+/// 2. Native tampilkan overlay di atas TikTok/Instagram (REALTIME)
+/// 3. User pilih aksi (Abaikan/Tutup Aplikasi)
+/// 4. Native broadcast hasil ke Flutter via EventChannel
+/// 5. Flutter handle callback (onDismiss/onCloseApp)
 class OverlayService {
   static const MethodChannel _channel = MethodChannel('com.paradise.app/overlay');
 
   static const EventChannel _eventChannel =
       EventChannel('com.paradise.app/overlay_events');
 
-  /**
-   * Cek apakah SYSTEM_ALERT_WINDOW permission sudah diaktifkan
-   */
+  /// Cek apakah SYSTEM_ALERT_WINDOW permission sudah diaktifkan
   Future<bool> canDrawOverlays() async {
     try {
       final bool result = await _channel.invokeMethod('canDrawOverlays');
@@ -29,9 +25,7 @@ class OverlayService {
     }
   }
 
-  /**
-   * Buka settings untuk aktifkan SYSTEM_ALERT_WINDOW permission
-   */
+  /// Buka settings untuk aktifkan SYSTEM_ALERT_WINDOW permission
   Future<void> openOverlaySettings() async {
     try {
       await _channel.invokeMethod('openOverlaySettings');
@@ -40,16 +34,14 @@ class OverlayService {
     }
   }
 
-  /**
-   * Tampilkan overlay REALTIME di atas aplikasi yang sedang dibuka (TikTok, Instagram, dll)
-   * 
-   * Input:
-   * - level: LOW, MEDIUM, HIGH
-   * - appName: nama aplikasi (TikTok, Instagram, dll)
-   * 
-   * ✅ FIXED: Removed imageBytes to fix TransactionTooLargeException
-   * Overlay hanya tampilkan text warning, tidak perlu screenshot preview
-   */
+  /// Tampilkan overlay REALTIME di atas aplikasi yang sedang dibuka (TikTok, Instagram, dll)
+  /// 
+  /// Input:
+  /// - level: LOW, MEDIUM, HIGH
+  /// - appName: nama aplikasi (TikTok, Instagram, dll)
+  /// 
+  /// ✅ FIXED: Removed imageBytes to fix TransactionTooLargeException
+  /// Overlay hanya tampilkan text warning, tidak perlu screenshot preview
   Future<void> showOverlay({
     required String level,
     required String appName,
@@ -69,9 +61,7 @@ class OverlayService {
     }
   }
 
-  /**
-   * Sembunyikan overlay
-   */
+  /// Sembunyikan overlay
   Future<void> hideOverlay() async {
     try {
       await _channel.invokeMethod('hideOverlay');
@@ -80,13 +70,11 @@ class OverlayService {
     }
   }
 
-  /**
-   * Listen event dari native (user dismiss/close app)
-   * 
-   * Return Stream yang emit:
-   * - {'action': 'dismissed'} → user pilih Abaikan
-   * - {'action': 'close_app', 'app_name': 'TikTok'} → user pilih Tutup Aplikasi
-   */
+  /// Listen event dari native (user dismiss/close app)
+  /// 
+  /// Return Stream yang emit:
+  /// - {'action': 'dismissed'} → user pilih Abaikan
+  /// - {'action': 'close_app', 'app_name': 'TikTok'} → user pilih Tutup Aplikasi
   Stream<Map<String, dynamic>> get overlayEvents {
     return _eventChannel.receiveBroadcastStream().map((event) {
       print('📨 Received overlay event: $event');

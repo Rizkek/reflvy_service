@@ -699,8 +699,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hint: 'user@example.com',
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
-                              if (v == null || v.isEmpty)
+                              if (v == null || v.isEmpty) {
                                 return 'Email wajib diisi';
+                              }
                               if (!v.contains('@')) return 'Email tidak valid';
                               return null;
                             },

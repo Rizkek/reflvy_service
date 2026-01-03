@@ -13,16 +13,14 @@ import 'screen_capture_service.dart';
 import '../../constants/api_constants.dart';
 import '../widgets/nsfw_alert_screen.dart';
 
-/**
- * AutoScreenshotService - Service untuk auto capture setiap 5 detik
- * 
- * FUNGSI:
- * 1. Timer otomatis setiap 5 detik
- * 2. Capture FULL SCREEN (bukan cuma app Flutter)
- * 3. Detect app yang sedang dibuka
- * 4. Save ke folder dengan filename: screenshot_[time]_[appname].png
- * 5. Track semua screenshot dalam list
- */
+/// AutoScreenshotService - Service untuk auto capture setiap 5 detik
+/// 
+/// FUNGSI:
+/// 1. Timer otomatis setiap 5 detik
+/// 2. Capture FULL SCREEN (bukan cuma app Flutter)
+/// 3. Detect app yang sedang dibuka
+/// 4. Save ke folder dengan filename: screenshot_[time]_[appname].png
+/// 5. Track semua screenshot dalam list
 class AutoScreenshotService extends GetxController {
   // Service untuk detect app name
   final AppDetectionService _appDetectionService = AppDetectionService();
@@ -45,16 +43,14 @@ class AutoScreenshotService extends GetxController {
   // Path folder untuk session ini
   String? _sessionFolder;
 
-  /**
-   * START - Mulai auto screenshot setiap 5 detik
-   * 
-   * FLOW:
-   * 1. Request MediaProjection permission (popup system)
-   * 2. User klik "Start now"
-   * 3. Buat folder untuk session ini
-   * 4. Capture screenshot pertama
-   * 5. Start timer untuk capture tiap 5 detik
-   */
+  /// START - Mulai auto screenshot setiap 5 detik
+  /// 
+  /// FLOW:
+  /// 1. Request MediaProjection permission (popup system)
+  /// 2. User klik "Start now"
+  /// 3. Buat folder untuk session ini
+  /// 4. Capture screenshot pertama
+  /// 5. Start timer untuk capture tiap 5 detik
   Future<void> startAutoScreenshot() async {
     if (isRecording.value) return;
 
@@ -106,14 +102,12 @@ class AutoScreenshotService extends GetxController {
     );
   }
 
-  /**
-   * STOP - Hentikan auto screenshot
-   * 
-   * FLOW:
-   * 1. Cancel timer
-   * 2. Stop MediaProjection
-   * 3. Show summary
-   */
+  /// STOP - Hentikan auto screenshot
+  /// 
+  /// FLOW:
+  /// 1. Cancel timer
+  /// 2. Stop MediaProjection
+  /// 3. Show summary
   Future<void> stopAutoScreenshot() async {
     // Cancel timer
     _timer?.cancel();
@@ -133,15 +127,13 @@ class AutoScreenshotService extends GetxController {
     );
   }
 
-  /**
-   * CAPTURE - Ambil 1 screenshot, kirim ke API /detectnsfw
-   * 
-   * FLOW:
-   * 1. Detect app yang sedang dibuka (UsageStatsManager)
-   * 2. Capture full screen frame (MediaProjection)
-   * 3. Kirim ke API dengan JWT token
-   * 4. Simpan hasil ke list (in-memory)
-   */
+  /// CAPTURE - Ambil 1 screenshot, kirim ke API /detectnsfw
+  /// 
+  /// FLOW:
+  /// 1. Detect app yang sedang dibuka (UsageStatsManager)
+  /// 2. Capture full screen frame (MediaProjection)
+  /// 3. Kirim ke API dengan JWT token
+  /// 4. Simpan hasil ke list (in-memory)
   Future<void> _captureAndSave() async {
     try {
       // STEP 1: Deteksi aplikasi yang sedang dibuka
@@ -214,17 +206,15 @@ class AutoScreenshotService extends GetxController {
     }
   }
 
-  /**
-   * SEND TO API - Kirim screenshot ke /api/detectnsfw
-   * 
-   * PARAMS:
-   * - imageBytes: Screenshot dalam format PNG (Uint8List)
-   * - appName: Nama aplikasi yang sedang dibuka
-   * 
-   * RETURN:
-   * - int (0-3) jika berhasil dan dapat response dari API
-   * - null jika gagal
-   */
+  /// SEND TO API - Kirim screenshot ke /api/detectnsfw
+  /// 
+  /// PARAMS:
+  /// - imageBytes: Screenshot dalam format PNG (Uint8List)
+  /// - appName: Nama aplikasi yang sedang dibuka
+  /// 
+  /// RETURN:
+  /// - int (0-3) jika berhasil dan dapat response dari API
+  /// - null jika gagal
   Future<int?> _sendToDetectNsfwApi(Uint8List imageBytes, String appName) async {
     try {
       // STEP 1: Get JWT token dari Firebase Auth
@@ -358,11 +348,9 @@ class AutoScreenshotService extends GetxController {
   }
 }
 
-/**
- * NsfwDetection - Model untuk data deteksi NSFW
- * 
- * Digunakan untuk trigger notifikasi full-screen
- */
+/// NsfwDetection - Model untuk data deteksi NSFW
+/// 
+/// Digunakan untuk trigger notifikasi full-screen
 class NsfwDetection {
   final int level; // 0-3
   final String appName;

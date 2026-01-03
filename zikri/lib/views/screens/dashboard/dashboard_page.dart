@@ -8,8 +8,6 @@ import '../../widgets/activity_card.dart';
 import '../../widgets/skeleton_loader.dart';
 import 'history_detection_log.dart';
 import '../notification/notification_screen.dart';
-import '../../../services/statistic/statistics_service.dart';
-import '../../../services/storage/secure_storage_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});

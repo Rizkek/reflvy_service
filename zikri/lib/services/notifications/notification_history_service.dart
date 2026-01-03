@@ -7,7 +7,7 @@ class NotificationHistoryService {
   NotificationHistoryService._internal();
 
   // In-memory notification storage (in production, use database like SQLite)
-  static List<Map<String, dynamic>> _notifications = [];
+  static final List<Map<String, dynamic>> _notifications = [];
 
   // Get all notifications
   List<Map<String, dynamic>> getAllNotifications() {

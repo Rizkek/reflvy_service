@@ -10,12 +10,6 @@ class SettingsController extends GetxController {
   // Sensitivity: 1 (Low), 2 (Medium), 3 (High)
   final RxInt sensitivityLevel = 1.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    // In a real app, load these from SecureStorage or API
-    // _loadSettings();
-  }
 
   void toggleProtection(bool value) {
     isProtectionEnabled.value = value;

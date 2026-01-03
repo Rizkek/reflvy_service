@@ -544,7 +544,7 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${screenshot['timestamp'].toString().substring(11, 19)}',
+                              screenshot['timestamp'].toString().substring(11, 19),
                               style: GoogleFonts.raleway(
                                 color: const Color(0xFF94A3B8),
                                 fontSize: 11,

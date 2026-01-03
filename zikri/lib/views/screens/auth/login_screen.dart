@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import '../../../models/login.dart';
@@ -289,10 +289,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             validator: (value) {
-                              if (value == null || value.isEmpty)
+                              if (value == null || value.isEmpty) {
                                 return 'Email wajib diisi';
-                              if (!value.contains('@'))
+                              }
+                              if (!value.contains('@')) {
                                 return 'Email tidak valid';
+                              }
                               return null;
                             },
                           ),
@@ -356,8 +358,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             validator: (value) {
-                              if (value == null || value.isEmpty)
+                              if (value == null || value.isEmpty) {
                                 return 'Password wajib diisi';
+                              }
                               return null;
                             },
                           ),

@@ -597,7 +597,7 @@ class _ParentProfilePageState extends State<ParentProfilePage> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
         ],
       ),
     );
